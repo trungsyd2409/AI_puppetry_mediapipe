@@ -138,9 +138,28 @@ def render(svg_path, png_path, scale=SCALE):
     subprocess.run(["rsvg-convert", "-z", str(scale), "-o", png_path, svg_path], check=True)
 
 
-def build(out_dir, name, parts, strings):
+def circle(c, r):
+    return {"type": "circle", "c": list(c), "r": r}
+
+
+def capsule_shape(a, b, r):
+    return {"type": "capsule", "a": list(a), "b": list(b), "r": r}
+
+
+def _local_shape(shape, pivot):
+    """World design coords -> coords relative to the part pivot."""
+    out = dict(shape)
+    for k in ("c", "a", "b"):
+        if k in shape:
+            out[k] = [round(shape[k][0] - pivot[0], 2), round(shape[k][1] - pivot[1], 2)]
+    return out
+
+
+def build(out_dir, name, parts, strings, colliders=None):
     """parts: (id, parent, z, svg, pivot_world, limitDeg|None)
-    strings: (id, part, anchor_world, finger, mediapipe_landmark)"""
+    strings: (id, part, anchor_world, finger, mediapipe_landmark)
+    colliders: {part_id: {"density": float, "shapes": [circle()/capsule_shape() in world design coords]}}"""
+    colliders = colliders or {}
     parts_dir = os.path.join(out_dir, "parts")
     os.makedirs(parts_dir, exist_ok=True)
     rig_parts = []
@@ -167,11 +186,13 @@ def build(out_dir, name, parts, strings):
             "pivot": [round(pivot[0] - x0, 2), round(pivot[1] - y0, 2)],
             "pivotWorld": [round(pivot[0], 2), round(pivot[1], 2)],
             "limitDeg": list(limits) if limits else None,
+            "density": colliders.get(pid, {}).get("density", 1.0),
+            "colliders": [_local_shape(sh, pivot) for sh in colliders.get(pid, {}).get("shapes", [])],
         })
     by_id = {p["id"]: p for p in rig_parts}
     rig = {
         "name": name,
-        "units": "design units (1 unit = 2 px in PNG); y points down; _L = viewer's left",
+        "units": "design units (1 unit = 2 px in PNG); y points down; _L = viewer's left; colliders are relative to the part pivot",
         "canvas": [W, H],
         "pngScale": SCALE,
         "feetY": max(p["origin"][1] + p["size"][1] for p in rig_parts) - PAD,

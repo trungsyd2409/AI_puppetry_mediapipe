@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rối Thủy Đình</title>
+</head>
+<body>
+  <main class="app">
+    <div class="stage-wrap">
+      <canvas id="stage" width="1600" height="900"></canvas>
+      <div id="overlay" class="overlay">
+        <div class="card">
+          <h1>Rối Thủy Đình</h1>
+          <p>Giơ tay trước camera để nối dây và điều khiển rối. Rút tay ra khỏi khung hình thì dây đứt, rối ngã.</p>
+          <div class="buttons">
+            <button id="btnCamera" class="primary">Bật camera</button>
+            <button id="btnMouse">Dùng chuột (test)</button>
+          </div>
+          <p id="status" class="status">Đang tải...</p>
+          <p class="hint">Ngón giữa: đầu · ngón trỏ, áp út: hai tay · ngón cái, út: hai gối</p>
+        </div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <select id="pick" aria-label="Chọn rối"></select>
+      <button id="tbCamera">Camera [C]</button>
+      <button id="tbMouse">Chuột [M]</button>
+      <button id="tbReset">Reset [R]</button>
+      <span class="keys">[D] collider · [H] ẩn HUD · chuột: giữ trái + phím 1-5</span>
+    </div>
+    <video id="video" playsinline muted></video>
+  </main>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

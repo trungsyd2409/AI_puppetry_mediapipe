@@ -222,6 +222,37 @@ STRINGS = [
     ("knee_R", "shin_R", mx(KNE_L), "pinky", 20),
 ]
 
+HAND_TIP_L = lerp(ELB_L, WRI_L, 1.3)
+FOOT_L = ((ANK_L[0] + 4, ANK_L[1] + 22), (ANK_L[0] - 28, ANK_L[1] + 26))
+
+
+def side(shapes_L):
+    out = []
+    for sh in shapes_L:
+        m = dict(sh)
+        for k in ("c", "a", "b"):
+            if k in sh:
+                m[k] = list(mx(sh[k]))
+        out.append(m)
+    return out
+
+
+ARM_U = [capsule_shape(SHO_L, ELB_L, 11)]
+ARM_F = [capsule_shape(ELB_L, HAND_TIP_L, 9)]
+LEG_U = [capsule_shape(HIP_L, KNE_L, 17)]
+LEG_S = [capsule_shape(KNE_L, ANK_L, 17), capsule_shape(*FOOT_L, 9)]
+COLLIDERS = {
+    "torso": {"density": 1.0, "shapes": [capsule_shape((200, 262), (200, 336), 44)]},
+    "head": {"density": 0.8, "shapes": [circle((200, 172), 38), capsule_shape((112, 130), (288, 130), 10)]},
+    "hair": {"density": 0.25, "shapes": [capsule_shape((200, 200), (200, 360), 34)]},
+    "flap_front": {"density": 0.3, "shapes": [capsule_shape((200, 360), (200, 580), 28)]},
+    "flap_back": {"density": 0.3, "shapes": [capsule_shape((200, 360), (200, 570), 38)]},
+    "upper_arm_L": {"density": 1.0, "shapes": ARM_U}, "upper_arm_R": {"density": 1.0, "shapes": side(ARM_U)},
+    "forearm_L": {"density": 1.0, "shapes": ARM_F}, "forearm_R": {"density": 1.0, "shapes": side(ARM_F)},
+    "thigh_L": {"density": 1.0, "shapes": LEG_U}, "thigh_R": {"density": 1.0, "shapes": side(LEG_U)},
+    "shin_L": {"density": 1.0, "shapes": LEG_S}, "shin_R": {"density": 1.0, "shapes": side(LEG_S)},
+}
+
 if __name__ == "__main__":
-    build(OUT, "co_gai", PARTS, STRINGS)
+    build(OUT, "co_gai", PARTS, STRINGS, COLLIDERS)
     print("co_gai done")

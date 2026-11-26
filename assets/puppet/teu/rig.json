@@ -1,6 +1,6 @@
 {
   "name": "teu",
-  "units": "design units (1 unit = 2 px in PNG); y points down; _L = viewer's left",
+  "units": "design units (1 unit = 2 px in PNG); y points down; _L = viewer's left; colliders are relative to the part pivot",
   "canvas": [
     400,
     720
@@ -30,7 +30,30 @@
         200,
         300
       ],
-      "limitDeg": null
+      "limitDeg": null,
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "circle",
+          "c": [
+            0,
+            -8
+          ],
+          "r": 76
+        },
+        {
+          "type": "capsule",
+          "a": [
+            -50,
+            84
+          ],
+          "b": [
+            50,
+            84
+          ],
+          "r": 28
+        }
+      ]
     },
     {
       "id": "head",
@@ -57,6 +80,17 @@
       "limitDeg": [
         -35,
         35
+      ],
+      "density": 0.8,
+      "colliders": [
+        {
+          "type": "circle",
+          "c": [
+            0,
+            -68
+          ],
+          "r": 58
+        }
       ]
     },
     {
@@ -84,6 +118,21 @@
       "limitDeg": [
         -70,
         60
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            -9,
+            118
+          ],
+          "r": 20
+        }
       ]
     },
     {
@@ -111,6 +160,33 @@
       "limitDeg": [
         -10,
         120
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            -4,
+            112
+          ],
+          "r": 14
+        },
+        {
+          "type": "capsule",
+          "a": [
+            2,
+            130
+          ],
+          "b": [
+            -34,
+            134
+          ],
+          "r": 10
+        }
       ]
     },
     {
@@ -138,6 +214,21 @@
       "limitDeg": [
         -60,
         70
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            9,
+            118
+          ],
+          "r": 20
+        }
       ]
     },
     {
@@ -165,6 +256,33 @@
       "limitDeg": [
         -120,
         10
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            4,
+            112
+          ],
+          "r": 14
+        },
+        {
+          "type": "capsule",
+          "a": [
+            -2,
+            130
+          ],
+          "b": [
+            34,
+            134
+          ],
+          "r": 10
+        }
       ]
     },
     {
@@ -192,6 +310,21 @@
       "limitDeg": [
         -150,
         60
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            -37,
+            84
+          ],
+          "r": 15
+        }
       ]
     },
     {
@@ -219,6 +352,21 @@
       "limitDeg": [
         -140,
         10
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            -20.7,
+            107.64
+          ],
+          "r": 12
+        }
       ]
     },
     {
@@ -246,6 +394,21 @@
       "limitDeg": [
         -60,
         150
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            37,
+            84
+          ],
+          "r": 15
+        }
       ]
     },
     {
@@ -273,6 +436,21 @@
       "limitDeg": [
         -10,
         140
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            20.7,
+            107.64
+          ],
+          "r": 12
+        }
       ]
     }
   ],

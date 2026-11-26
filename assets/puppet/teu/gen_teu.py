@@ -157,6 +157,35 @@ STRINGS = [
     ("knee_R", "shin_R", mx(KNE_L), "pinky", 20),
 ]
 
+HAND_TIP_L = lerp(ELB_L, WRI_L, 1.38)
+FOOT_L = ((ANK_L[0] + 6, ANK_L[1] + 18), (ANK_L[0] - 30, ANK_L[1] + 22))
+
+
+def side(shapes_L):
+    """Mirror a list of collider shapes to the viewer's right side."""
+    out = []
+    for sh in shapes_L:
+        m = dict(sh)
+        for k in ("c", "a", "b"):
+            if k in sh:
+                m[k] = list(mx(sh[k]))
+        out.append(m)
+    return out
+
+
+ARM_U = [capsule_shape(SHO_L, ELB_L, 15)]
+ARM_F = [capsule_shape(ELB_L, HAND_TIP_L, 12)]
+LEG_U = [capsule_shape(HIP_L, KNE_L, 20)]
+LEG_S = [capsule_shape(KNE_L, ANK_L, 14), capsule_shape(*FOOT_L, 10)]
+COLLIDERS = {
+    "torso": {"density": 1.0, "shapes": [circle((200, 292), 76), capsule_shape((150, 384), (250, 384), 28)]},
+    "head": {"density": 0.8, "shapes": [circle((200, 120), 58)]},
+    "upper_arm_L": {"density": 1.0, "shapes": ARM_U}, "upper_arm_R": {"density": 1.0, "shapes": side(ARM_U)},
+    "forearm_L": {"density": 1.0, "shapes": ARM_F}, "forearm_R": {"density": 1.0, "shapes": side(ARM_F)},
+    "thigh_L": {"density": 1.0, "shapes": LEG_U}, "thigh_R": {"density": 1.0, "shapes": side(LEG_U)},
+    "shin_L": {"density": 1.0, "shapes": LEG_S}, "shin_R": {"density": 1.0, "shapes": side(LEG_S)},
+}
+
 if __name__ == "__main__":
-    build(OUT, "teu", PARTS, STRINGS)
+    build(OUT, "teu", PARTS, STRINGS, COLLIDERS)
     print("teu done")

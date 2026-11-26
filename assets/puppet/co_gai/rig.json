@@ -1,6 +1,6 @@
 {
   "name": "co_gai",
-  "units": "design units (1 unit = 2 px in PNG); y points down; _L = viewer's left",
+  "units": "design units (1 unit = 2 px in PNG); y points down; _L = viewer's left; colliders are relative to the part pivot",
   "canvas": [
     400,
     720
@@ -30,7 +30,22 @@
         200,
         290
       ],
-      "limitDeg": null
+      "limitDeg": null,
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            -28
+          ],
+          "b": [
+            0,
+            46
+          ],
+          "r": 44
+        }
+      ]
     },
     {
       "id": "head",
@@ -57,6 +72,29 @@
       "limitDeg": [
         -30,
         30
+      ],
+      "density": 0.8,
+      "colliders": [
+        {
+          "type": "circle",
+          "c": [
+            0,
+            -60
+          ],
+          "r": 38
+        },
+        {
+          "type": "capsule",
+          "a": [
+            -88,
+            -102
+          ],
+          "b": [
+            88,
+            -102
+          ],
+          "r": 10
+        }
       ]
     },
     {
@@ -84,6 +122,21 @@
       "limitDeg": [
         -15,
         15
+      ],
+      "density": 0.25,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            32
+          ],
+          "b": [
+            0,
+            192
+          ],
+          "r": 34
+        }
       ]
     },
     {
@@ -111,6 +164,21 @@
       "limitDeg": [
         -20,
         20
+      ],
+      "density": 0.3,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            26
+          ],
+          "b": [
+            0,
+            236
+          ],
+          "r": 38
+        }
       ]
     },
     {
@@ -138,6 +206,21 @@
       "limitDeg": [
         -20,
         20
+      ],
+      "density": 0.3,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            26
+          ],
+          "b": [
+            0,
+            246
+          ],
+          "r": 28
+        }
       ]
     },
     {
@@ -165,6 +248,21 @@
       "limitDeg": [
         -70,
         60
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            -4,
+            130
+          ],
+          "r": 17
+        }
       ]
     },
     {
@@ -192,6 +290,33 @@
       "limitDeg": [
         -10,
         120
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            -2,
+            130
+          ],
+          "r": 17
+        },
+        {
+          "type": "capsule",
+          "a": [
+            2,
+            152
+          ],
+          "b": [
+            -30,
+            156
+          ],
+          "r": 9
+        }
       ]
     },
     {
@@ -219,6 +344,21 @@
       "limitDeg": [
         -60,
         70
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            4,
+            130
+          ],
+          "r": 17
+        }
       ]
     },
     {
@@ -246,6 +386,33 @@
       "limitDeg": [
         -120,
         10
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            2,
+            130
+          ],
+          "r": 17
+        },
+        {
+          "type": "capsule",
+          "a": [
+            -2,
+            152
+          ],
+          "b": [
+            30,
+            156
+          ],
+          "r": 9
+        }
       ]
     },
     {
@@ -273,6 +440,21 @@
       "limitDeg": [
         -150,
         60
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            -25,
+            74
+          ],
+          "r": 11
+        }
       ]
     },
     {
@@ -300,6 +482,21 @@
       "limitDeg": [
         -140,
         10
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            -18.2,
+            96.2
+          ],
+          "r": 9
+        }
       ]
     },
     {
@@ -327,6 +524,21 @@
       "limitDeg": [
         -60,
         150
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            25,
+            74
+          ],
+          "r": 11
+        }
       ]
     },
     {
@@ -354,6 +566,21 @@
       "limitDeg": [
         -10,
         140
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            18.2,
+            96.2
+          ],
+          "r": 9
+        }
       ]
     }
   ],
