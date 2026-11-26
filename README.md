@@ -1,6 +1,6 @@
 # AI Puppetry: Rối Thủy Đình
 
-Điều khiển rối dây bằng tay qua webcam (MediaPipe). Mất tay thì dây đứt, rối ngã kiểu ragdoll. Tay quay lại thì dây tự nối từ đầu ngón tay xuống rối và kéo rối đứng dậy.
+Điều khiển rối dây bằng tay qua webcam (MediaPipe). Màn hình vuông: nửa trên là camera, nửa dưới là sân khấu, dây chạy từ đầu ngón tay xuống rối. Mất tay thì dây đứt, rối ngã kiểu ragdoll. Tay quay lại thì dây tự nối từ đầu ngón tay xuống rối và kéo rối đứng dậy.
 
 ```
 assets/   art rối (rig.json + mảnh PNG) và sân khấu, kèm script Python để vẽ lại
@@ -38,9 +38,10 @@ web/      web app: Vite + TypeScript + MediaPipe Tasks Vision + Planck.js (vật
 
 Mọi thông số nằm trong `web/src/config.ts`, ví dụ:
 - `fingerGain`: ngón tay cử động thì tay chân rối cử động mạnh hay nhẹ.
-- `dropPx`: khoảng cách từ bàn tay xuống đầu rối.
+- `dropPx`: độ dài dây từ bàn tay xuống đầu rối.
 - `loseAfter`, `growTime`, `standTime`: thời gian chờ trước khi ngã, thời gian dây mọc, thời gian đứng dậy.
-- `camMap`: vùng camera nào ứng với vùng nào trên sân khấu.
+- `view`: kích thước màn vuông, chiều cao phần camera, phần sân khấu được cắt từ đâu.
+- `puppetHeight`: độ cao rối trên sân khấu.
 
 ## Nhúng vào website
 
@@ -51,7 +52,7 @@ npm run build
 Upload folder `web/dist/` lên một host có **HTTPS** (GitHub Pages, Netlify, Vercel...). Nhúng bằng iframe, nhớ có `allow="camera"`:
 
 ```html
-<iframe src="https://your-site/puppetry/" width="1280" height="760" allow="camera; fullscreen" style="border:0"></iframe>
+<iframe src="https://your-site/puppetry/" width="800" height="860" allow="camera; fullscreen" style="border:0"></iframe>
 ```
 
 Trình duyệt chỉ cho dùng camera trên `https://` hoặc `localhost`. Toàn bộ xử lý chạy trên máy người xem, video không gửi lên server.

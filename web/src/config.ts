@@ -1,4 +1,5 @@
-// All tunable numbers in one place. Stage units are pixels of the 1600 x 900 stage.
+// All tunable numbers in one place. Physics/stage units are pixels of the 1600 x 900 stage art;
+// the screen shows that stage scaled into the bottom half of a square canvas.
 export const CFG = {
   // physics
   ppm: 100,              // stage pixels per physics metre
@@ -10,10 +11,16 @@ export const CFG = {
   angularDamping: 1.2,
   wallMargin: 40,
 
-  // camera (normalised, already mirrored) -> stage control area
-  camMap: { x0: 0.1, x1: 0.9, y0: 0.08, y1: 0.75, stageX0: 200, stageX1: 1400, stageY0: 30, stageY1: 470 },
-  dropPx: 110,           // head anchor hangs this far below the palm
-  fingerGain: 1.7,       // how much a finger moving relative to the palm moves its limb
+  // square screen: camera on top, stage below
+  view: {
+    size: 1200,          // canvas is size x size
+    split: 600,          // camera height; the stage fills the rest
+    stageCropY: 90,      // first stage row shown (the 1600x900 stage is scaled to the canvas width)
+  },
+  puppetHeight: 470,     // stage px from head to feet
+  dropPx: 600,           // head anchor hangs this far below the palm (strings run from the camera down)
+  fingerGain: 1.3,       // how much a finger moving relative to the palm moves its limb
+  targetMinY: 120,       // strings never lift the puppet above this stage row
   maxDetectHz: 30,
 
   // hand presence state machine

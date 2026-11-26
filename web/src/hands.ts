@@ -99,12 +99,12 @@ export class MouseHands implements HandSource {
   private lastEmit = 0;
   private off: (() => void)[] = [];
 
-  constructor(canvas: HTMLCanvasElement, private stageToNorm: (p: Pt) => Pt) {
+  constructor(canvas: HTMLCanvasElement, private screenToNorm: (p: Pt) => Pt) {
     const toStage = (e: PointerEvent): Pt => {
       const r = canvas.getBoundingClientRect();
       return { x: ((e.clientX - r.left) / r.width) * canvas.width, y: ((e.clientY - r.top) / r.height) * canvas.height };
     };
-    const move = (e: PointerEvent) => { this.pos = this.stageToNorm(toStage(e)); };
+    const move = (e: PointerEvent) => { this.pos = this.screenToNorm(toStage(e)); };
     const down = (e: PointerEvent) => { move(e); this.down = true; canvas.setPointerCapture(e.pointerId); };
     const up = () => { this.down = false; };
     const key = (e: KeyboardEvent) => {

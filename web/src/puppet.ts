@@ -66,7 +66,7 @@ export class Puppet {
     this.label = label;
     const rig = asset.rig;
     const top = Math.min(...rig.parts.map((p) => p.origin[1]));
-    this.k = stage.puppetHeight / (rig.feetY - top);
+    this.k = (CFG.puppetHeight || stage.puppetHeight) / (rig.feetY - top);
     const toStage = (x: number, y: number): Pt => ({
       x: homeX + (x - rig.canvas[0] / 2) * this.k,
       y: stage.floorY + (y - rig.feetY) * this.k - 2,
@@ -218,7 +218,7 @@ export class Puppet {
       const tip = c.tips[st.slot], cal = this.calib[st.slot];
       const d = { x: (tip.x - c.palm.x - cal.x) * CFG.fingerGain, y: (tip.y - c.palm.y - cal.y) * CFG.fingerGain };
       let t = { x: base.x + st.restRel.x + d.x, y: base.y + st.restRel.y + d.y };
-      t = { x: Math.min(x1, Math.max(x0, t.x)), y: Math.min(this.stage.floorY + 40, Math.max(-200, t.y)) };
+      t = { x: Math.min(x1, Math.max(x0, t.x)), y: Math.min(this.stage.floorY + 40, Math.max(CFG.targetMinY, t.y)) };
       if (this.state === "REATTACHING") {
         if (standing && !st.start) st.start = this.anchorPx(st);
         if (st.start) t = lerp(st.start, t, e);

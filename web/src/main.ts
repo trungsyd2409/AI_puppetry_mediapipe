@@ -4,7 +4,7 @@ import { loadPuppets, loadStage, type PuppetAsset, type Stage } from "./assets";
 import { CameraHands, type HandObs, type HandSource, MouseHands } from "./hands";
 import { createWorld } from "./physics";
 import { type Control, Puppet } from "./puppet";
-import { drawHud, drawInset } from "./render";
+import { drawCamera, drawHud, drawLog, type LogLine } from "./render";
 import type { World } from "planck";
 
 const LABELS: Record<string, string> = { teu: "Chú Tễu", co_gai: "Cô gái áo dài" };
@@ -23,21 +23,31 @@ let puppets: Puppet[] = [];
 let source: HandSource | null = null;
 let lastHands: HandObs[] = [];
 let showDebug = false, showHud = true;
+const log: LogLine[] = [];
+const prevState = new Map<Puppet, string>();
 
 // ------------------------------------------------------------------ mapping
-const cm = CFG.camMap;
-function camToStage(p: Pt): Pt {
-  return {
-    x: cm.stageX0 + ((p.x - cm.x0) / (cm.x1 - cm.x0)) * (cm.stageX1 - cm.stageX0),
-    y: cm.stageY0 + ((p.y - cm.y0) / (cm.y1 - cm.y0)) * (cm.stageY1 - cm.stageY0),
-  };
+// Screen = square canvas. Top `split` px: mirrored webcam (cover-fit).
+// Bottom: the 1600x900 stage scaled to the canvas width, starting at stage row stageCropY.
+// Physics and puppets live in stage pixels; fingertips above the stage get negative stage y,
+// so strings naturally run from the camera half down to the puppets.
+const V = CFG.view;
+const W = V.size;
+const S = W / 1600;                                   // stage px -> screen px
+const stageOffsetY = V.split - V.stageCropY * S;
+
+function camRect() {
+  const vw = video.videoWidth || 640, vh = video.videoHeight || 480;
+  const sc = Math.max(W / vw, V.split / vh);
+  const dw = vw * sc, dh = vh * sc;
+  return { ox: (W - dw) / 2, oy: (V.split - dh) / 2, dw, dh };
 }
-function stageToCam(p: Pt): Pt {
-  return {
-    x: cm.x0 + ((p.x - cm.stageX0) / (cm.stageX1 - cm.stageX0)) * (cm.x1 - cm.x0),
-    y: cm.y0 + ((p.y - cm.stageY0) / (cm.stageY1 - cm.stageY0)) * (cm.y1 - cm.y0),
-  };
-}
+const normToScreen = (p: Pt): Pt => { const r = camRect(); return { x: r.ox + p.x * r.dw, y: r.oy + p.y * r.dh }; };
+const screenToNorm = (p: Pt): Pt => { const r = camRect(); return { x: (p.x - r.ox) / r.dw, y: (p.y - r.oy) / r.dh }; };
+const screenToStage = (p: Pt): Pt => ({ x: p.x / S, y: (p.y - stageOffsetY) / S });
+const camToStage = (p: Pt): Pt => screenToStage(normToScreen(p));
+const stageTransform = () => ctx.setTransform(S, 0, 0, S, 0, stageOffsetY);
+
 function toControl(h: HandObs): Control {
   const palmIdx = [0, 5, 9, 13, 17];
   const palmN = palmIdx.reduce((a, i) => ({ x: a.x + h.lm[i].x / 5, y: a.y + h.lm[i].y / 5 }), { x: 0, y: 0 });
@@ -95,7 +105,7 @@ async function useCamera() {
 
 function useMouse() {
   source?.dispose();
-  source = new MouseHands(canvas, stageToCam);
+  source = new MouseHands(canvas, screenToNorm);
   overlay.classList.add("hidden");
 }
 
@@ -131,13 +141,51 @@ function frame(now: number) {
   requestAnimationFrame(frame);
 }
 
+function logStates(now: number) {
+  for (const p of puppets) {
+    const prev = prevState.get(p);
+    if (prev === p.state) continue;
+    prevState.set(p, p.state);
+    if (prev === undefined) continue;
+    const msg = p.state === "REATTACHING" ? ["hand tracked, strings grow", "#facc15"]
+      : p.state === "ATTACHED" ? ["strings attached", "#4ade80"]
+      : ["hand lost, strings cut", "#f87171"];
+    log.push({ t: now, text: `${p.id}: ${msg[0]}`, color: msg[1] });
+    if (log.length > 30) log.shift();
+  }
+}
+
 function render(now: number) {
+  logStates(now);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.drawImage(stage.bg, 0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, W, W);
+
+  // top: camera
+  const hint = lastHands.length ? [] : source?.kind === "mouse"
+    ? ["CHẾ ĐỘ CHUỘT", "Giữ chuột trái ở đây để làm bàn tay", "Phím 1-5: nhấc từng ngón · thả chuột: rối ngã"]
+    : ["Chưa bật camera", "Bấm Camera [C] hoặc Chuột [M]"];
+  drawCamera(ctx, W, V.split, source?.kind === "camera" ? source.video : undefined, camRect(), lastHands, normToScreen, hint);
+
+  // bottom: stage
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, V.split, W, W - V.split); ctx.clip();
+  stageTransform();
+  ctx.drawImage(stage.bg, 0, 0, stage.size[0], stage.size[1]);
   for (const p of puppets) p.draw(ctx);
+  ctx.drawImage(stage.fg, 0, 0, stage.size[0], stage.size[1]);
+  ctx.restore();
+
+  // divider
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = "#e2b44a";
+  ctx.fillRect(0, V.split - 2, W, 4);
+
+  // strings cross both halves
+  stageTransform();
   for (const p of puppets) p.drawStrings(ctx, now);
-  ctx.drawImage(stage.fg, 0, 0, canvas.width, canvas.height);
   if (showDebug) puppets.forEach((p) => p.drawDebug(ctx));
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+
   if (showHud) {
     drawHud(ctx, {
       source: source ? (source.kind === "camera" ? "camera / MediaPipe" : "mouse (test)") : "none",
@@ -147,7 +195,7 @@ function render(now: number) {
       sampleAge: source ? now - source.lastSampleTime : 0,
       puppets,
     });
-    drawInset(ctx, canvas.width, source?.video, lastHands, source?.kind === "mouse");
+    drawLog(ctx, W, log, now);
   }
 }
 
@@ -155,8 +203,8 @@ function render(now: number) {
 async function boot() {
   statusEl.textContent = "Đang tải rối và sân khấu...";
   [stage, assets] = await Promise.all([loadStage(), loadPuppets()]);
-  canvas.width = stage.size[0];
-  canvas.height = stage.size[1];
+  canvas.width = W;
+  canvas.height = W;
   world = createWorld(stage);
   pickEl.innerHTML = `<option value="all">Cả hai rối</option>` +
     assets.map((a) => `<option value="${a.id}">${LABELS[a.id] ?? a.id}</option>`).join("");
