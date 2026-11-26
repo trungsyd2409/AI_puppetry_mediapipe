@@ -4,7 +4,8 @@
 //   DETACHED     no strings, pure ragdoll (falls to the floor)
 //   REATTACHING  hand is back: strings grow from fingertips to the puppet (growTime),
 //                then string strength ramps 0 -> 1 and the puppet stands up (standTime)
-//   ATTACHED     strings pull each anchor toward a target computed from the hand
+//   ATTACHED     each string is a rope of fixed length from a fingertip to an anchor:
+//                slack when shorter, slightly elastic when pulled taut
 import {
   type Body, BoxShape, CircleShape, type PolygonShape, RevoluteJoint, Vec2, type World,
 } from "planck";
@@ -31,8 +32,9 @@ interface StringRT {
   restRel: Pt;          // rest offset from the head anchor (px)
   chainMass: number;    // mass this string supports (limb chain)
   isHead: boolean;
-  target: Pt;           // px
-  start: Pt | null;     // anchor position when the stand-up phase began
+  restLen: number;      // fixed rope length (px), set when the strings attach
+  len: number;          // current rope length (px); shrinks to restLen while standing up
+  startLen: number | null;
 }
 
 const smooth = (t: number) => { const c = Math.min(1, Math.max(0, t)); return c * c * (3 - 2 * c); };
@@ -52,10 +54,8 @@ export class Puppet {
   private strings: StringRT[] = [];
   private torso!: PartRT;
   private totalMass = 0;
-  private headSupport = 0;
   private lastSeen = -Infinity;
   private seenFrames = 0;
-  private calib: Pt[] = [];
   private filters = Array.from({ length: 6 }, () => new PointFilter(CFG.euro.minCutoff, CFG.euro.beta, CFG.euro.dCutoff));
   private lastSample = 0;
   private detachedAt = -Infinity;
@@ -128,7 +128,6 @@ export class Puppet {
     // strings
     const headDef = rig.strings.find((st) => st.mpLandmark === 12) ?? rig.strings[0];
     const headRest = toStage(...headDef.anchorWorld);
-    let limbMass = 0;
     for (const def of rig.strings) {
       const part = this.byId.get(def.part)!;
       const w = toStage(...def.anchorWorld);
@@ -137,17 +136,15 @@ export class Puppet {
       if (!isHead) {
         for (let p: PartRT | undefined = part; p && p !== this.torso; p = p.def.parent ? this.byId.get(p.def.parent) : undefined)
           chainMass += p.body.getMass();
-        limbMass += chainMass;
       }
       this.strings.push({
         def, part, isHead, chainMass,
         local: part.body.getLocalPoint(Vec2(m(w.x), m(w.y))),
         slot: TIP_SLOT[def.mpLandmark] ?? 2,
         restRel: { x: w.x - headRest.x, y: w.y - headRest.y },
-        target: w, start: null,
+        restLen: 0, len: 0, startLen: null,
       });
     }
-    this.headSupport = Math.max(0.2 * this.totalMass, this.totalMass - limbMass);
     this.kick();
   }
 
@@ -188,10 +185,29 @@ export class Puppet {
     else if (this.state === "REATTACHING") this.strength = smooth((this.stateTime - CFG.growTime) / CFG.standTime);
     else this.strength = 0;
 
-    if (this.control && this.state !== "DETACHED") this.computeTargets();
+    if (this.state === "REATTACHING" && this.stateTime >= CFG.growTime) {
+      const e = smooth((this.stateTime - CFG.growTime) / CFG.standTime);
+      for (const st of this.strings) {
+        if (st.startLen === null) st.startLen = Math.max(st.restLen, this.ropeDist(st));
+        st.len = st.startLen + (st.restLen - st.startLen) * e;
+      }
+    } else if (this.state === "ATTACHED") {
+      for (const st of this.strings) st.len = st.restLen;
+    }
   }
 
-  private setState(s: PuppetState) { this.state = s; this.stateTime = 0; }
+  private setState(s: PuppetState) {
+    this.state = s;
+    this.stateTime = 0;
+    const damping = s === "DETACHED" ? CFG.linearDamping : CFG.rope.attachedDamping;
+    for (const p of this.parts) p.body.setLinearDamping(damping);
+  }
+
+  /** Distance fingertip -> anchor in stage px. */
+  private ropeDist(st: StringRT) {
+    const tip = this.control!.tips[st.slot], a = this.anchorPx(st);
+    return Math.hypot(a.x - tip.x, a.y - tip.y);
+  }
 
   private detach(now: number) {
     this.droppedTips = this.strings.map((st) => this.control?.tips[st.slot] ?? this.anchorPx(st));
@@ -201,49 +217,45 @@ export class Puppet {
     this.kick();
   }
 
+  /** Rope lengths: with the hand as it is now, the head hangs `stringLength` below the middle
+   *  fingertip and every other anchor sits at its rest-pose offset from the head. */
   private reattach() {
     const c = this.control!;
-    this.calib = c.tips.map((t) => ({ x: t.x - c.palm.x, y: t.y - c.palm.y }));
-    this.strings.forEach((st) => (st.start = null));
-    this.setState("REATTACHING");
-  }
-
-  private computeTargets() {
-    const c = this.control!;
-    const base = { x: c.palm.x, y: c.palm.y + CFG.dropPx };
-    const standing = this.state === "REATTACHING" && this.stateTime >= CFG.growTime;
-    const e = smooth((this.stateTime - CFG.growTime) / CFG.standTime);
-    const [x0, x1] = [CFG.wallMargin + 30, this.stage.size[0] - CFG.wallMargin - 30];
+    const L = CFG.rope.lengthOfScreen * this.stage.size[0];   // screen height in stage px
+    const head = this.strings.find((st) => st.isHead)!;
+    const headPos = { x: c.tips[head.slot].x, y: c.tips[head.slot].y + L };
     for (const st of this.strings) {
-      const tip = c.tips[st.slot], cal = this.calib[st.slot];
-      const d = { x: (tip.x - c.palm.x - cal.x) * CFG.fingerGain, y: (tip.y - c.palm.y - cal.y) * CFG.fingerGain };
-      let t = { x: base.x + st.restRel.x + d.x, y: base.y + st.restRel.y + d.y };
-      t = { x: Math.min(x1, Math.max(x0, t.x)), y: Math.min(this.stage.floorY + 40, Math.max(CFG.targetMinY, t.y)) };
-      if (this.state === "REATTACHING") {
-        if (standing && !st.start) st.start = this.anchorPx(st);
-        if (st.start) t = lerp(st.start, t, e);
-      }
-      st.target = t;
+      const want = { x: headPos.x + st.restRel.x, y: headPos.y + st.restRel.y };
+      const tip = c.tips[st.slot];
+      st.restLen = Math.hypot(want.x - tip.x, want.y - tip.y);
+      st.len = st.restLen;
+      st.startLen = null;
     }
+    this.setState("REATTACHING");
   }
 
   // ---------------------------------------------------------------- physics
   /** Call before every fixed physics step. */
   applyForces() {
     const s = this.strength;
-    if (s <= 0) return;
-    const g = CFG.gravity;
+    if (s <= 0 || !this.control) return;
+    const r = CFG.rope;
     for (const st of this.strings) {
       const body = st.part.body;
       const p = body.getWorldPoint(st.local);
+      const tip = this.control.tips[st.slot];
+      const dx = m(tip.x) - p.x, dy = m(tip.y) - p.y;
+      const d = Math.hypot(dx, dy);
+      const stretch = d - m(st.len);
+      if (stretch <= 0 || d < 1e-6) continue;           // slack rope: no force
+      const ux = dx / d, uy = dy / d;
       const v = body.getLinearVelocityFromWorldPoint(p);
-      const sp = st.isHead ? CFG.headSpring : CFG.limbSpring;
-      const mass = st.isHead ? this.headSupport : st.chainMass;
-      let ax = sp.omega ** 2 * (m(st.target.x) - p.x) - 2 * sp.zeta * sp.omega * v.x;
-      let ay = sp.omega ** 2 * (m(st.target.y) - p.y) - 2 * sp.zeta * sp.omega * v.y;
-      const a = Math.hypot(ax, ay);
-      if (a > CFG.maxAccel) { ax *= CFG.maxAccel / a; ay *= CFG.maxAccel / a; }
-      body.applyForce(Vec2(s * mass * ax, s * mass * (ay - g)), p, true);
+      const vAlong = -(v.x * ux + v.y * uy);             // speed away from the fingertip
+      const omega = st.isHead ? r.omega : r.limbOmega;
+      const mass = st.isHead ? this.totalMass : st.chainMass;
+      let a = omega * omega * stretch + 2 * r.zeta * omega * vAlong;
+      a = Math.min(Math.max(a, 0), r.maxAccel);          // ropes pull, never push
+      body.applyForce(Vec2(s * mass * a * ux, s * mass * a * uy), p, true);
     }
     // keep the torso roughly upright while strings hold it, like a real control bar
     const tb = this.torso.body;
@@ -300,12 +312,17 @@ export class Puppet {
         const tip = this.control.tips[st.slot];
         const a = this.anchorPx(st);
         const end = lerp(tip, a, grow);
+        // slack rope sags, taut rope is straight
+        const d = Math.hypot(a.x - tip.x, a.y - tip.y);
+        const sag = grow < 1 ? 0 : Math.sqrt(Math.max(0, st.len * st.len - d * d)) * 0.35;
+        const mid = { x: (tip.x + end.x) / 2, y: (tip.y + end.y) / 2 + sag };
+        const path = () => { ctx.beginPath(); ctx.moveTo(tip.x, tip.y); ctx.quadraticCurveTo(mid.x, mid.y, end.x, end.y); ctx.stroke(); };
         ctx.strokeStyle = "rgba(255,236,190,0.35)";
         ctx.lineWidth = 3.2;
-        ctx.beginPath(); ctx.moveTo(tip.x, tip.y); ctx.lineTo(end.x, end.y); ctx.stroke();
+        path();
         ctx.strokeStyle = "rgba(30,16,8,0.9)";
         ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(tip.x, tip.y); ctx.lineTo(end.x, end.y); ctx.stroke();
+        path();
         if (grow < 1) {
           ctx.fillStyle = "#ffe08a";
           ctx.beginPath(); ctx.arc(end.x, end.y, 4, 0, Math.PI * 2); ctx.fill();
@@ -348,11 +365,6 @@ export class Puppet {
         }
         ctx.stroke();
       }
-    }
-    for (const st of this.strings) {
-      if (this.state === "DETACHED") continue;
-      ctx.strokeStyle = "rgba(255,60,60,0.9)";
-      ctx.beginPath(); ctx.arc(st.target.x, st.target.y, 7, 0, Math.PI * 2); ctx.stroke();
     }
     ctx.restore();
   }

@@ -10,7 +10,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--paper)
   font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 .app { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 10px; padding: 12px; }
-.stage-wrap { position: relative; width: min(100%, calc(100vh - 80px)); aspect-ratio: 1 / 1; }
+.stage-wrap { position: relative; width: min(100%, calc(100vh - 24px)); aspect-ratio: 1 / 1; }
 canvas { width: 100%; height: 100%; display: block; border-radius: 10px; background: #e9d6ad;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); touch-action: none; }
 video { display: none; }
@@ -28,5 +28,3 @@ button.primary { background: #a82219; border-color: #6a120d; color: #fff; }
 .card button:not(.primary) { background: #fff8e6; color: var(--ink); }
 .status { min-height: 1.4em; font-size: 14px; margin: 6px 0; }
 .hint { font-size: 13px; opacity: 0.75; margin: 0; }
-.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
-.keys { font-size: 13px; opacity: 0.7; }

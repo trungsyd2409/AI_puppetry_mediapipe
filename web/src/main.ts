@@ -4,7 +4,7 @@ import { loadPuppets, loadStage, type PuppetAsset, type Stage } from "./assets";
 import { CameraHands, type HandObs, type HandSource, MouseHands } from "./hands";
 import { createWorld } from "./physics";
 import { type Control, Puppet } from "./puppet";
-import { drawCamera, drawHud, drawLog, type LogLine } from "./render";
+import { drawCamera } from "./render";
 import type { World } from "planck";
 
 const LABELS: Record<string, string> = { teu: "Chú Tễu", co_gai: "Cô gái áo dài" };
@@ -14,7 +14,6 @@ const ctx = canvas.getContext("2d")!;
 const video = document.getElementById("video") as HTMLVideoElement;
 const overlay = document.getElementById("overlay")!;
 const statusEl = document.getElementById("status")!;
-const pickEl = document.getElementById("pick") as HTMLSelectElement;
 
 let stage: Stage;
 let assets: PuppetAsset[] = [];
@@ -22,9 +21,7 @@ let world: World;
 let puppets: Puppet[] = [];
 let source: HandSource | null = null;
 let lastHands: HandObs[] = [];
-let showDebug = false, showHud = true;
-const log: LogLine[] = [];
-const prevState = new Map<Puppet, string>();
+let showDebug = false;
 
 // ------------------------------------------------------------------ mapping
 // Screen = square canvas. Top `split` px: mirrored webcam (cover-fit).
@@ -59,7 +56,7 @@ function spawn() {
   puppets.forEach((p) => p.destroy());
   const order = Object.keys(LABELS);
   const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : 99);
-  const ids = pickEl.value === "all" ? assets.map((a) => a.id).sort((a, b) => rank(a) - rank(b)) : [pickEl.value];
+  const ids = assets.map((a) => a.id).sort((a, b) => rank(a) - rank(b));
   const xs = ids.length === 1 ? [800] : ids.map((_, i) => 670 + (260 * i) / Math.max(1, ids.length - 1));
   puppets = ids.map((id, i) => new Puppet(world, assets.find((a) => a.id === id)!, stage, xs[i], LABELS[id] ?? id));
 }
@@ -110,17 +107,14 @@ function useMouse() {
 }
 
 // ------------------------------------------------------------------ loop
-let last = performance.now(), acc = 0, renderHz = 60, trackHz = 0, lastSample = 0;
+let last = performance.now(), acc = 0;
 
 function frame(now: number) {
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
-  renderHz += (1 / Math.max(dt, 1e-3) - renderHz) * 0.05;
 
   const obs = source?.poll(now) ?? null;
   if (obs) {
-    if (lastSample) trackHz += (1000 / Math.max(1, now - lastSample) - trackHz) * 0.1;
-    lastSample = now;
     lastHands = obs;
     const owners = assign(obs.map(toControl));
     for (const p of puppets) p.onHand(owners.get(p) ?? null, now);
@@ -141,22 +135,7 @@ function frame(now: number) {
   requestAnimationFrame(frame);
 }
 
-function logStates(now: number) {
-  for (const p of puppets) {
-    const prev = prevState.get(p);
-    if (prev === p.state) continue;
-    prevState.set(p, p.state);
-    if (prev === undefined) continue;
-    const msg = p.state === "REATTACHING" ? ["hand tracked, strings grow", "#facc15"]
-      : p.state === "ATTACHED" ? ["strings attached", "#4ade80"]
-      : ["hand lost, strings cut", "#f87171"];
-    log.push({ t: now, text: `${p.id}: ${msg[0]}`, color: msg[1] });
-    if (log.length > 30) log.shift();
-  }
-}
-
 function render(now: number) {
-  logStates(now);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, W, W);
 
@@ -186,17 +165,6 @@ function render(now: number) {
   if (showDebug) puppets.forEach((p) => p.drawDebug(ctx));
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-  if (showHud) {
-    drawHud(ctx, {
-      source: source ? (source.kind === "camera" ? "camera / MediaPipe" : "mouse (test)") : "none",
-      hands: lastHands.length,
-      renderHz, trackHz,
-      inferMs: source?.inferMs ?? 0,
-      sampleAge: source ? now - source.lastSampleTime : 0,
-      puppets,
-    });
-    drawLog(ctx, W, log, now);
-  }
 }
 
 // ------------------------------------------------------------------ boot
@@ -206,8 +174,6 @@ async function boot() {
   canvas.width = W;
   canvas.height = W;
   world = createWorld(stage);
-  pickEl.innerHTML = `<option value="all">Cả hai rối</option>` +
-    assets.map((a) => `<option value="${a.id}">${LABELS[a.id] ?? a.id}</option>`).join("");
   spawn();
   statusEl.textContent = "Chọn cách điều khiển.";
   requestAnimationFrame(frame);
@@ -215,15 +181,9 @@ async function boot() {
 
 document.getElementById("btnCamera")!.onclick = () => useCamera();
 document.getElementById("btnMouse")!.onclick = () => useMouse();
-document.getElementById("tbCamera")!.onclick = () => useCamera();
-document.getElementById("tbMouse")!.onclick = () => useMouse();
-document.getElementById("tbReset")!.onclick = () => spawn();
-pickEl.onchange = () => spawn();
 window.addEventListener("keydown", (e) => {
-  if (e.target instanceof HTMLSelectElement) return;
   const k = e.key.toLowerCase();
   if (k === "d") showDebug = !showDebug;
-  else if (k === "h") showHud = !showHud;
   else if (k === "r") spawn();
   else if (k === "c") useCamera();
   else if (k === "m") useMouse();

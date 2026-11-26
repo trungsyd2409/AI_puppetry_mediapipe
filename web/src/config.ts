@@ -18,9 +18,6 @@ export const CFG = {
     stageCropY: 90,      // first stage row shown (the 1600x900 stage is scaled to the canvas width)
   },
   puppetHeight: 470,     // stage px from head to feet
-  dropPx: 600,           // head anchor hangs this far below the palm (strings run from the camera down)
-  fingerGain: 1.3,       // how much a finger moving relative to the palm moves its limb
-  targetMinY: 120,       // strings never lift the puppet above this stage row
   maxDetectHz: 30,
 
   // hand presence state machine
@@ -29,11 +26,16 @@ export const CFG = {
   growTime: 0.35,        // s: strings grow from fingertips to the puppet
   standTime: 0.9,        // s: string strength ramps 0 -> 1, puppet stands up
 
-  // string springs
-  headSpring: { omega: 9, zeta: 0.9 },
-  limbSpring: { omega: 8, zeta: 0.75 },
-  maxAccel: 150,         // m/s^2 clamp so fast hands do not explode the ragdoll
-  upright: { kp: 30, kd: 7, radius: 0.7 },
+  // strings = ropes of fixed length with a little stretch
+  rope: {
+    lengthOfScreen: 0.5,   // head string length as a fraction of the screen height
+    omega: 16,             // stiffness of the head rope (rad/s); higher = less stretch
+    limbOmega: 13,         // stiffness of the hand/knee ropes
+    zeta: 0.6,             // damping along the rope
+    maxAccel: 220,         // m/s^2 clamp so fast hands do not explode the ragdoll
+    attachedDamping: 1.1,  // air drag while hanging, stops endless pendulum swinging
+  },
+  upright: { kp: 25, kd: 6, radius: 0.7 },
 
   // landmark smoothing (One Euro filter, stage pixels)
   euro: { minCutoff: 1.4, beta: 0.01, dCutoff: 1.0 },

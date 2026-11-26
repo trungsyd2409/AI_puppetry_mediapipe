@@ -30,15 +30,17 @@ web/      web app: Vite + TypeScript + MediaPipe Tasks Vision + Planck.js (vật
 | Ngón cái | Gối trái |
 | Ngón út | Gối phải |
 
-- Di chuyển cả bàn tay: rối di chuyển theo. Hạ tay xuống thấp: rối ngồi xuống sàn.
+- Di chuyển cả bàn tay: rối di chuyển theo.
 - Hai tay: tay trái điều khiển rối bên trái, tay phải điều khiển rối bên phải.
-- Phím tắt: `C` camera, `M` chuột, `R` reset, `D` xem collider, `H` ẩn HUD.
+- Phím tắt: `C` camera, `M` chuột, `R` reset, `D` xem collider.
+- Dây có chiều dài cố định (mặc định bằng nửa chiều cao màn hình), hơi đàn hồi. Đưa tay lên cao thì dây căng và nhấc rối lên, hạ tay xuống thì dây chùng và rối ngồi xuống.
 
 ## Chỉnh cảm giác điều khiển
 
 Mọi thông số nằm trong `web/src/config.ts`, ví dụ:
-- `fingerGain`: ngón tay cử động thì tay chân rối cử động mạnh hay nhẹ.
-- `dropPx`: độ dài dây từ bàn tay xuống đầu rối.
+- `rope.lengthOfScreen`: độ dài dây so với chiều cao màn hình (0.5 = một nửa). Giảm xuống 0.4 nếu bạn hay để tay ở giữa khung camera.
+- `rope.omega`, `rope.limbOmega`: độ cứng của dây. Số lớn thì dây ít giãn hơn.
+- `rope.attachedDamping`: lực cản không khí khi rối treo, giúp rối bớt đung đưa.
 - `loseAfter`, `growTime`, `standTime`: thời gian chờ trước khi ngã, thời gian dây mọc, thời gian đứng dậy.
 - `view`: kích thước màn vuông, chiều cao phần camera, phần sân khấu được cắt từ đâu.
 - `puppetHeight`: độ cao rối trên sân khấu.
