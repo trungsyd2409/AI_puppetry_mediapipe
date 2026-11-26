@@ -28,7 +28,7 @@ export const CFG = {
 
   // strings = ropes of fixed length with a little stretch
   rope: {
-    lengthOfScreen: 0.4,   // head string length as a fraction of the screen height
+    lengthOfScreen: 0.3,   // head string length as a fraction of the screen height
     omega: 16,             // stiffness of the head rope (rad/s); higher = less stretch
     limbOmega: 13,         // stiffness of the hand/knee ropes
     zeta: 0.6,             // damping along the rope
@@ -36,6 +36,15 @@ export const CFG = {
     attachedDamping: 1.1,  // air drag while hanging, stops endless pendulum swinging
   },
   upright: { kp: 25, kd: 6, radius: 0.7 },
+
+  // living background
+  ambience: {
+    fishEvery: [4, 9],       // s between carp jumps
+    birdsEvery: [7, 15],     // s between flocks of cranes
+    gustEvery: [9, 16],      // s between gusts of wind
+    gustDuration: 4,         // s
+    windAccel: 3,            // m/s^2 pushed on the puppets at the peak of a gust
+  },
 
   // landmark smoothing (One Euro filter, stage pixels)
   euro: { minCutoff: 1.4, beta: 0.01, dCutoff: 1.0 },

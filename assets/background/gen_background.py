@@ -1,9 +1,12 @@
 """Water-puppet stage (thuy dinh) background, 1600 x 900.
 
 Outputs:
-  stage_bg.svg|png  everything behind the puppets
-  stage_fg.svg|png  water + lotus drawn in front of the puppets (transparent elsewhere)
-  stage.json        floor line, stage area and suggested puppet height
+  stage_bg.svg|png        everything behind the puppets (flags and waves are animated by the web app)
+  stage_fg_water.svg|png  semi-transparent water band in front of the puppets
+  stage_fg_lotus.svg|png  lotus clusters in front of everything
+  stage_fg.svg|png        water + waves + lotus in one static image (used by assets/preview.html)
+  stage_bg_static.png     bg with static flags and waves (used by assets/preview.html)
+  stage.json              floor line, flag poles, water line, props for the web app
 """
 import json, math, os, random, subprocess
 
@@ -223,11 +226,20 @@ def pavilion():
     return o
 
 
+POLES = [(150, 1), (1450, -1)]   # (x, side the flags fly to)
+POLE_TOP = 166
+
+
+def pole(x):
+    return (f'<rect x="{x-5}" y="{POLE_TOP+4}" width="10" height="{H-POLE_TOP-4}" fill="#5A3A22" '
+            f'stroke="{INK}" stroke-width="2"/>'
+            f'<circle cx="{x}" cy="{POLE_TOP}" r="9" fill="{GOLD}" stroke="{INK}" stroke-width="2"/>')
+
+
 def flags(x, side):
     """Swallow-tail festival pennants (co duoi nheo) on a pole standing in the water."""
     colors = ["#C0281C", "#E2B44A", "#2F6FA8", "#3E8A4A", "#8A3FA0"]
-    o = (f'<rect x="{x-5}" y="170" width="10" height="{H-170}" fill="#5A3A22" stroke="{INK}" stroke-width="2"/>'
-         f'<circle cx="{x}" cy="166" r="9" fill="{GOLD}" stroke="{INK}" stroke-width="2"/>')
+    o = pole(x)
     for i, c in enumerate(colors):
         y = 190 + i * 34
         L = 110 - i * 8
@@ -237,7 +249,7 @@ def flags(x, side):
     return o
 
 
-def water(y0, fg=False):
+def water(y0, fg=False, waves=True):
     o = ""
     if not fg:
         o += (f'<linearGradient id="g_water" x1="0" y1="0" x2="0" y2="1">'
@@ -246,7 +258,7 @@ def water(y0, fg=False):
         # pavilion reflection
         for x in (300, 560, 1040, 1300):
             o += f'<rect x="{x-14}" y="{y0+4}" width="28" height="70" fill="{LACQUER}" opacity="0.25"/>'
-    rows = range(y0 + 10, H + 10, 22)
+    rows = range(y0 + 10, H + 10, 22) if waves else []
     for j, y in enumerate(rows):
         off = (j % 2) * 40
         waves = "".join(f'M{x},{y} q20,-12 40,0 q-12,-4 -18,2' for x in range(-40 + off, W + 40, 80))
@@ -276,30 +288,39 @@ def lotus_cluster(x, y, s=1.0, flip=1):
             + f'</g>')
 
 
-bg = (sky() + mountains() + cranes() + bamboo(70) + bamboo(1530, -1)
-      + water(FLOOR_Y + 30) + pavilion() + flags(150, 1) + flags(1450, -1)
-      + f'<rect width="{W}" height="{H}" filter="url(#f_paper)" opacity="0.35"/>'
-      + f'<rect width="{W}" height="{H}" fill="url(#g_vig)"/>')
-fg = (f'<linearGradient id="g_fgw" x1="0" y1="0" x2="0" y2="1">'
-      f'<stop offset="0" stop-color="{WATER}" stop-opacity="0"/>'
-      f'<stop offset="0.35" stop-color="{WATER}" stop-opacity="0.85"/>'
-      f'<stop offset="1" stop-color="{WATER_D}"/></linearGradient>'
-      f'<rect x="0" y="815" width="{W}" height="{H-815}" fill="url(#g_fgw)"/>'
-      + water(830, fg=True)
-      + lotus_cluster(70, 800, 1.0) + lotus_cluster(1530, 800, 1.0, -1)
-      + lotus_cluster(330, 860, 0.6) + lotus_cluster(1270, 860, 0.6, -1))
+paper = (f'<rect width="{W}" height="{H}" filter="url(#f_paper)" opacity="0.35"/>'
+         f'<rect width="{W}" height="{H}" fill="url(#g_vig)"/>')
+scene = sky() + mountains() + cranes() + bamboo(70) + bamboo(1530, -1)
+bg = scene + water(FLOOR_Y + 30, waves=False) + pavilion() + "".join(pole(x) for x, _ in POLES) + paper
+bg_static = scene + water(FLOOR_Y + 30) + pavilion() + "".join(flags(x, sd) for x, sd in POLES) + paper
+FG_WATER_Y = 815
+fg_water = (f'<linearGradient id="g_fgw" x1="0" y1="0" x2="0" y2="1">'
+            f'<stop offset="0" stop-color="{WATER}" stop-opacity="0"/>'
+            f'<stop offset="0.35" stop-color="{WATER}" stop-opacity="0.85"/>'
+            f'<stop offset="1" stop-color="{WATER_D}"/></linearGradient>'
+            f'<rect x="0" y="{FG_WATER_Y}" width="{W}" height="{H-FG_WATER_Y}" fill="url(#g_fgw)"/>')
+fg_lotus = (lotus_cluster(70, 800, 1.0) + lotus_cluster(1530, 800, 1.0, -1)
+            + lotus_cluster(330, 860, 0.6) + lotus_cluster(1270, 860, 0.6, -1))
+fg = fg_water + water(830, fg=True) + fg_lotus
 
-for name, inner in (("stage_bg", bg), ("stage_fg", fg)):
+for name, inner in (("stage_bg", bg), ("stage_bg_static", bg_static), ("stage_fg", fg),
+                    ("stage_fg_water", fg_water), ("stage_fg_lotus", fg_lotus)):
     p = os.path.join(OUT, f"{name}.svg")
     open(p, "w").write(svg(inner))
     subprocess.run(["rsvg-convert", "-o", os.path.join(OUT, f"{name}.png"), p], check=True)
+os.remove(os.path.join(OUT, "stage_bg_static.svg"))
 
 json.dump({
     "size": [W, H],
     "floorY": FLOOR_Y,
     "stageX": [330, 1270],
     "puppetHeight": 420,
-    "layers": {"bg": "stage_bg.png", "fg": "stage_fg.png"},
-    "note": "draw bg, then puppets (feet on floorY), then fg",
+    "layers": {"bg": "stage_bg.png", "fg": "stage_fg.png",
+               "fgWater": "stage_fg_water.png", "fgLotus": "stage_fg_lotus.png"},
+    "poles": [{"x": x, "top": POLE_TOP, "side": sd} for x, sd in POLES],
+    "water": {"surfaceY": FLOOR_Y + 30, "frontY": 830},
+    "props": {"fish": "props/fish.png", "crane": ["props/crane_0.png", "props/crane_1.png", "props/crane_2.png"],
+              "leaf": "props/leaf.png", "scale": 2},
+    "note": "web order: bg, back waves, flags, birds, puppets, fish, fgWater, front waves, fgLotus, wind",
 }, open(os.path.join(OUT, "stage.json"), "w"), indent=2)
 print("background done")

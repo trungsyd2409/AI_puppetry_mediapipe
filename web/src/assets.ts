@@ -38,13 +38,19 @@ export interface Rig {
 
 export interface PuppetAsset { id: string; rig: Rig; images: Map<string, HTMLImageElement> }
 
+export interface Pole { x: number; top: number; side: number }
+
 export interface Stage {
   size: [number, number];
   floorY: number;
   stageX: [number, number];
   puppetHeight: number;
+  poles: Pole[];
+  water: { surfaceY: number; frontY: number };
   bg: HTMLImageElement;
-  fg: HTMLImageElement;
+  fgWater: HTMLImageElement;
+  fgLotus: HTMLImageElement;
+  props: { fish: HTMLImageElement; crane: HTMLImageElement[]; leaf: HTMLImageElement; scale: number };
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -74,12 +80,23 @@ export async function loadPuppets(): Promise<PuppetAsset[]> {
   }));
 }
 
+interface StageJson {
+  size: [number, number]; floorY: number; stageX: [number, number]; puppetHeight: number;
+  poles: Pole[]; water: { surfaceY: number; frontY: number };
+  layers: { bg: string; fgWater: string; fgLotus: string };
+  props: { fish: string; crane: string[]; leaf: string; scale: number };
+}
+
 export async function loadStage(): Promise<Stage> {
-  const s = await json<{ size: [number, number]; floorY: number; stageX: [number, number]; puppetHeight: number }>(
-    "assets/background/stage.json");
-  const [bg, fg] = await Promise.all([
-    loadImage(`${BASE}assets/background/stage_bg.png`),
-    loadImage(`${BASE}assets/background/stage_fg.png`),
+  const s = await json<StageJson>("assets/background/stage.json");
+  const img = (f: string) => loadImage(`${BASE}assets/background/${f}`);
+  const [bg, fgWater, fgLotus, fish, leaf, ...crane] = await Promise.all([
+    img(s.layers.bg), img(s.layers.fgWater), img(s.layers.fgLotus),
+    img(s.props.fish), img(s.props.leaf), ...s.props.crane.map(img),
   ]);
-  return { ...s, bg, fg };
+  return {
+    size: s.size, floorY: s.floorY, stageX: s.stageX, puppetHeight: s.puppetHeight,
+    poles: s.poles, water: s.water, bg, fgWater, fgLotus,
+    props: { fish, leaf, crane, scale: s.props.scale },
+  };
 }

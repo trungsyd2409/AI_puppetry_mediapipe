@@ -11,8 +11,7 @@ for folder, label, x in PUPPETS:
         p["png"] = f"puppet/{folder}/{p['png']}"
     rigs.append({"label": label, "x": x, "rig": rig})
 stage = json.load(open(os.path.join(ROOT, "background", "stage.json")))
-for k in stage["layers"]:
-    stage["layers"][k] = "background/" + stage["layers"][k]
+stage["layers"] = {"bg": "background/stage_bg_static.png", "fg": "background/stage_fg.png"}
 
 html = r"""<!doctype html>
 <html lang="vi"><head><meta charset="utf-8">

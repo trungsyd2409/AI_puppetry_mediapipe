@@ -27,8 +27,11 @@ function copyPuppets() {
     ids.push(name);
   }
   const bg = join(ASSETS, "background");
-  mkdirSync(join(dst, "background"), { recursive: true });
-  for (const f of ["stage.json", "stage_bg.png", "stage_fg.png"]) cpSync(join(bg, f), join(dst, "background", f));
+  mkdirSync(join(dst, "background", "props"), { recursive: true });
+  for (const f of readdirSync(bg))
+    if (f.endsWith(".png") || f.endsWith(".json")) cpSync(join(bg, f), join(dst, "background", f));
+  for (const f of readdirSync(join(bg, "props")))
+    if (f.endsWith(".png")) cpSync(join(bg, "props", f), join(dst, "background", "props", f));
   writeFileSync(join(dst, "puppets.json"), JSON.stringify(ids, null, 2));
   console.log(`[setup] assets copied: ${ids.join(", ")} + background`);
 }

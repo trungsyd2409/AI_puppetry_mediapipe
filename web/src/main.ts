@@ -5,6 +5,7 @@ import { CameraHands, type HandObs, type HandSource, MouseHands } from "./hands"
 import { createWorld } from "./physics";
 import { type Control, Puppet } from "./puppet";
 import { drawCamera } from "./render";
+import { Ambience } from "./ambience";
 import type { World } from "planck";
 
 const LABELS: Record<string, string> = { teu: "Chú Tễu", co_gai: "Cô gái áo dài" };
@@ -16,6 +17,7 @@ const overlay = document.getElementById("overlay")!;
 const statusEl = document.getElementById("status")!;
 
 let stage: Stage;
+let amb: Ambience;
 let assets: PuppetAsset[] = [];
 let world: World;
 let puppets: Puppet[] = [];
@@ -125,10 +127,12 @@ function frame(now: number) {
   }
 
   for (const p of puppets) p.update(dt, now);
+  amb.update(dt);
   acc += dt;
   let n = 0;
   while (acc >= CFG.fixedDt && n < CFG.maxSubSteps) {
-    for (const p of puppets) p.applyForces();
+    const wind = amb.windAccel();
+    for (const p of puppets) { p.applyForces(); p.applyWind(wind); }
     world.step(CFG.fixedDt, 8, 3);
     acc -= CFG.fixedDt;
     n++;
@@ -154,8 +158,15 @@ function render(now: number) {
   ctx.beginPath(); ctx.rect(0, V.split, W, W - V.split); ctx.clip();
   stageTransform();
   ctx.drawImage(stage.bg, 0, 0, stage.size[0], stage.size[1]);
+  amb.drawWaterBack(ctx);
+  amb.drawFlags(ctx);
+  amb.drawBirds(ctx);
   for (const p of puppets) p.draw(ctx);
-  ctx.drawImage(stage.fg, 0, 0, stage.size[0], stage.size[1]);
+  amb.drawFish(ctx);
+  ctx.drawImage(stage.fgWater, 0, 0, stage.size[0], stage.size[1]);
+  amb.drawWaterFront(ctx);
+  ctx.drawImage(stage.fgLotus, 0, 0, stage.size[0], stage.size[1]);
+  amb.drawWind(ctx);
   ctx.restore();
 
   // divider
@@ -178,6 +189,7 @@ async function boot() {
   canvas.width = W;
   canvas.height = W;
   world = createWorld(stage);
+  amb = new Ambience(stage);
   spawn();
   statusEl.textContent = "Chọn cách điều khiển.";
   requestAnimationFrame(frame);
@@ -200,4 +212,4 @@ boot().catch((e) => {
 });
 
 // handy for automated tests
-(window as unknown as { __app: object }).__app = { get puppets() { return puppets; }, useMouse };
+(window as unknown as { __app: object }).__app = { get puppets() { return puppets; }, useMouse, get amb() { return amb; } };

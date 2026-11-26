@@ -282,6 +282,12 @@ export class Puppet {
     tb.applyTorque(s * this.totalMass * radius * radius * (-kp * th - kd * tb.getAngularVelocity()), true);
   }
 
+  /** Horizontal wind push (m/s^2 on every part). */
+  applyWind(accel: number) {
+    if (accel === 0) return;
+    for (const p of this.parts) p.body.applyForceToCenter(Vec2(p.body.getMass() * accel, 0), true);
+  }
+
   anchorPx(st: StringRT): Pt {
     const p = st.part.body.getWorldPoint(st.local);
     return { x: px(p.x), y: px(p.y) };

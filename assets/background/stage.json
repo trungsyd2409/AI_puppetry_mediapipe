@@ -11,7 +11,35 @@
   "puppetHeight": 420,
   "layers": {
     "bg": "stage_bg.png",
-    "fg": "stage_fg.png"
+    "fg": "stage_fg.png",
+    "fgWater": "stage_fg_water.png",
+    "fgLotus": "stage_fg_lotus.png"
   },
-  "note": "draw bg, then puppets (feet on floorY), then fg"
+  "poles": [
+    {
+      "x": 150,
+      "top": 166,
+      "side": 1
+    },
+    {
+      "x": 1450,
+      "top": 166,
+      "side": -1
+    }
+  ],
+  "water": {
+    "surfaceY": 790,
+    "frontY": 830
+  },
+  "props": {
+    "fish": "props/fish.png",
+    "crane": [
+      "props/crane_0.png",
+      "props/crane_1.png",
+      "props/crane_2.png"
+    ],
+    "leaf": "props/leaf.png",
+    "scale": 2
+  },
+  "note": "web order: bg, back waves, flags, birds, puppets, fish, fgWater, front waves, fgLotus, wind"
 }
