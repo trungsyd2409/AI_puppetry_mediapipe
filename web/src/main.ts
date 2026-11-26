@@ -48,7 +48,11 @@ const stageTransform = () => ctx.setTransform(S, 0, 0, S, 0, stageOffsetY);
 function toControl(h: HandObs): Control {
   const palmIdx = [0, 5, 9, 13, 17];
   const palmN = palmIdx.reduce((a, i) => ({ x: a.x + h.lm[i].x / 5, y: a.y + h.lm[i].y / 5 }), { x: 0, y: 0 });
-  return { palm: camToStage(palmN), tips: [4, 8, 12, 16, 20].map((i) => camToStage(h.lm[i])) };
+  return {
+    palm: camToStage(palmN),
+    tips: [4, 8, 12, 16, 20].map((i) => camToStage(h.lm[i])),
+    indexRight: h.lm[5].x > h.lm[17].x,   // knuckles: index MCP vs pinky MCP (mirrored view)
+  };
 }
 
 // ------------------------------------------------------------------ puppets

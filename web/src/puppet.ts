@@ -16,8 +16,10 @@ import { PointFilter } from "./filter";
 
 export type PuppetState = "DETACHED" | "REATTACHING" | "ATTACHED";
 
-/** Hand in stage pixels. tips: thumb, index, middle, ring, pinky. */
-export interface Control { palm: Pt; tips: Pt[] }
+/** Hand in stage pixels. tips: thumb, index, middle, ring, pinky.
+ *  indexRight: on screen, the index-finger side of the palm is to the right of the pinky side
+ *  (true for a left hand with the palm to the camera, false for a right hand). */
+export interface Control { palm: Pt; tips: Pt[]; indexRight: boolean }
 
 const TIP_SLOT: Record<number, number> = { 4: 0, 8: 1, 12: 2, 16: 3, 20: 4 };
 const FINGER_COLORS = ["#ff9f43", "#feca57", "#48dbfb", "#1dd1a1", "#ff6b9d"];
@@ -28,7 +30,8 @@ interface StringRT {
   def: RigString;
   part: PartRT;
   local: Vec2;          // anchor in body-local metres
-  slot: number;         // finger slot 0..4
+  slot: number;         // finger slot 0..4 currently driving this string
+  defSlot: number;      // finger slot from rig.json
   restRel: Pt;          // rest offset from the head anchor (px)
   chainMass: number;    // mass this string supports (limb chain)
   isHead: boolean;
@@ -141,6 +144,7 @@ export class Puppet {
         def, part, isHead, chainMass,
         local: part.body.getLocalPoint(Vec2(m(w.x), m(w.y))),
         slot: TIP_SLOT[def.mpLandmark] ?? 2,
+        defSlot: TIP_SLOT[def.mpLandmark] ?? 2,
         restRel: { x: w.x - headRest.x, y: w.y - headRest.y },
         restLen: 0, len: 0, startLen: null,
       });
@@ -170,6 +174,7 @@ export class Puppet {
     this.control = {
       palm: this.filters[0].filter(raw.palm, dt),
       tips: raw.tips.map((t, i) => this.filters[i + 1].filter(t, dt)),
+      indexRight: raw.indexRight,
     };
   }
 
@@ -222,6 +227,17 @@ export class Puppet {
   private reattach() {
     const c = this.control!;
     const L = CFG.rope.lengthOfScreen * this.stage.size[0];   // screen height in stage px
+    // Left and right hands are mirror images, so the finger -> limb wiring depends on which
+    // hand (and which way it faces). The index/thumb side of the palm drives the hand/knee on
+    // that same side of the screen, the ring/pinky side drives the other one: no crossed strings.
+    const indexRight = c.indexRight;
+    for (const [inner, outer] of [[1, 3], [0, 4]]) {          // [index, ring], [thumb, pinky]
+      const ss = this.strings.filter((st) => st.defSlot === inner || st.defSlot === outer);
+      if (ss.length !== 2) continue;
+      ss.sort((a, b) => a.restRel.x - b.restRel.x);           // [screen-left anchor, screen-right anchor]
+      ss[0].slot = indexRight ? outer : inner;
+      ss[1].slot = indexRight ? inner : outer;
+    }
     const head = this.strings.find((st) => st.isHead)!;
     const headPos = { x: c.tips[head.slot].x, y: c.tips[head.slot].y + L };
     for (const st of this.strings) {
