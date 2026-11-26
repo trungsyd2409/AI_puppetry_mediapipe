@@ -212,4 +212,4 @@ boot().catch((e) => {
 });
 
 // handy for automated tests
-(window as unknown as { __app: object }).__app = { get puppets() { return puppets; }, useMouse, get amb() { return amb; } };
+(window as unknown as { __app: object }).__app = { get puppets() { return puppets; }, useMouse, get amb() { return amb; }, get world() { return world; } };

@@ -43,6 +43,8 @@ interface StringRT {
 const smooth = (t: number) => { const c = Math.min(1, Math.max(0, t)); return c * c * (3 - 2 * c); };
 const lerp = (a: Pt, b: Pt, t: number): Pt => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
 
+let nextGroup = 1;
+
 export class Puppet {
   readonly id: string;
   readonly label: string;
@@ -86,6 +88,8 @@ export class Puppet {
     rig.parts.forEach(visit);
 
     const s = this.k / CFG.ppm; // design units -> metres
+    // Own parts never collide (negative group); parts of other puppets and the world do.
+    const group = -(nextGroup++ % 30000);
     for (const def of ordered) {
       const pos = toStage(...def.pivotWorld);
       const body = world.createBody({
@@ -93,7 +97,7 @@ export class Puppet {
         linearDamping: CFG.linearDamping, angularDamping: CFG.angularDamping,
       });
       const fix = { density: def.density, friction: 0.7, restitution: 0.05,
-        filterCategoryBits: CAT_PUPPET, filterMaskBits: CAT_WORLD };
+        filterCategoryBits: CAT_PUPPET, filterMaskBits: CAT_WORLD | CAT_PUPPET, filterGroupIndex: group };
       const shapes: Shape[] = def.colliders.length ? def.colliders : [{ type: "circle", c: [0, 0], r: 10 }];
       for (const sh of shapes) {
         if (sh.type === "circle") {
