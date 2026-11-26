@@ -28,7 +28,7 @@ export const CFG = {
 
   // strings = ropes of fixed length with a little stretch
   rope: {
-    lengthOfScreen: 0.5,   // head string length as a fraction of the screen height
+    lengthOfScreen: 0.4,   // head string length as a fraction of the screen height
     omega: 16,             // stiffness of the head rope (rad/s); higher = less stretch
     limbOmega: 13,         // stiffness of the hand/knee ropes
     zeta: 0.6,             // damping along the rope
