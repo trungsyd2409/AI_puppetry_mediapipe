@@ -1,0 +1,432 @@
+{
+  "name": "co_gai",
+  "units": "design units (1 unit = 2 px in PNG); y points down; _L = viewer's left",
+  "canvas": [
+    400,
+    720
+  ],
+  "pngScale": 2,
+  "feetY": 647,
+  "parts": [
+    {
+      "id": "torso",
+      "parent": null,
+      "z": 4,
+      "svg": "parts/torso.svg",
+      "png": "parts/torso.png",
+      "origin": [
+        142,
+        216
+      ],
+      "size": [
+        116,
+        157
+      ],
+      "pivot": [
+        58,
+        74
+      ],
+      "pivotWorld": [
+        200,
+        290
+      ],
+      "limitDeg": null
+    },
+    {
+      "id": "head",
+      "parent": "torso",
+      "z": 8,
+      "svg": "parts/head.svg",
+      "png": "parts/head.png",
+      "origin": [
+        84,
+        33
+      ],
+      "size": [
+        232,
+        214
+      ],
+      "pivot": [
+        116,
+        199
+      ],
+      "pivotWorld": [
+        200,
+        232
+      ],
+      "limitDeg": [
+        -30,
+        30
+      ]
+    },
+    {
+      "id": "hair",
+      "parent": "head",
+      "z": 1,
+      "svg": "parts/hair.svg",
+      "png": "parts/hair.png",
+      "origin": [
+        138,
+        144
+      ],
+      "size": [
+        124,
+        260
+      ],
+      "pivot": [
+        62,
+        24
+      ],
+      "pivotWorld": [
+        200,
+        168
+      ],
+      "limitDeg": [
+        -15,
+        15
+      ]
+    },
+    {
+      "id": "flap_back",
+      "parent": "torso",
+      "z": 0,
+      "svg": "parts/flap_back.svg",
+      "png": "parts/flap_back.png",
+      "origin": [
+        128,
+        320
+      ],
+      "size": [
+        144,
+        291
+      ],
+      "pivot": [
+        72,
+        14
+      ],
+      "pivotWorld": [
+        200,
+        334
+      ],
+      "limitDeg": [
+        -20,
+        20
+      ]
+    },
+    {
+      "id": "flap_front",
+      "parent": "torso",
+      "z": 5,
+      "svg": "parts/flap_front.svg",
+      "png": "parts/flap_front.png",
+      "origin": [
+        152,
+        320
+      ],
+      "size": [
+        96,
+        299
+      ],
+      "pivot": [
+        48,
+        14
+      ],
+      "pivotWorld": [
+        200,
+        334
+      ],
+      "limitDeg": [
+        -20,
+        20
+      ]
+    },
+    {
+      "id": "thigh_L",
+      "parent": "torso",
+      "z": 3,
+      "svg": "parts/thigh_L.svg",
+      "png": "parts/thigh_L.png",
+      "origin": [
+        155,
+        326
+      ],
+      "size": [
+        53,
+        179
+      ],
+      "pivot": [
+        27,
+        26
+      ],
+      "pivotWorld": [
+        182,
+        352
+      ],
+      "limitDeg": [
+        -70,
+        60
+      ]
+    },
+    {
+      "id": "shin_L",
+      "parent": "thigh_L",
+      "z": 2,
+      "svg": "parts/shin_L.svg",
+      "png": "parts/shin_L.png",
+      "origin": [
+        136,
+        459
+      ],
+      "size": [
+        68,
+        192
+      ],
+      "pivot": [
+        42,
+        23
+      ],
+      "pivotWorld": [
+        178,
+        482
+      ],
+      "limitDeg": [
+        -10,
+        120
+      ]
+    },
+    {
+      "id": "thigh_R",
+      "parent": "torso",
+      "z": 3,
+      "svg": "parts/thigh_R.svg",
+      "png": "parts/thigh_R.png",
+      "origin": [
+        192,
+        326
+      ],
+      "size": [
+        53,
+        179
+      ],
+      "pivot": [
+        26,
+        26
+      ],
+      "pivotWorld": [
+        218,
+        352
+      ],
+      "limitDeg": [
+        -60,
+        70
+      ]
+    },
+    {
+      "id": "shin_R",
+      "parent": "thigh_R",
+      "z": 2,
+      "svg": "parts/shin_R.svg",
+      "png": "parts/shin_R.png",
+      "origin": [
+        196,
+        459
+      ],
+      "size": [
+        68,
+        192
+      ],
+      "pivot": [
+        26,
+        23
+      ],
+      "pivotWorld": [
+        222,
+        482
+      ],
+      "limitDeg": [
+        -120,
+        10
+      ]
+    },
+    {
+      "id": "upper_arm_L",
+      "parent": "torso",
+      "z": 6,
+      "svg": "parts/upper_arm_L.svg",
+      "png": "parts/upper_arm_L.png",
+      "origin": [
+        118,
+        229
+      ],
+      "size": [
+        64,
+        113
+      ],
+      "pivot": [
+        43,
+        21
+      ],
+      "pivotWorld": [
+        161,
+        250
+      ],
+      "limitDeg": [
+        -150,
+        60
+      ]
+    },
+    {
+      "id": "forearm_L",
+      "parent": "upper_arm_L",
+      "z": 7,
+      "svg": "parts/forearm_L.svg",
+      "png": "parts/forearm_L.png",
+      "origin": [
+        101,
+        306
+      ],
+      "size": [
+        53,
+        132
+      ],
+      "pivot": [
+        35,
+        18
+      ],
+      "pivotWorld": [
+        136,
+        324
+      ],
+      "limitDeg": [
+        -140,
+        10
+      ]
+    },
+    {
+      "id": "upper_arm_R",
+      "parent": "torso",
+      "z": 6,
+      "svg": "parts/upper_arm_R.svg",
+      "png": "parts/upper_arm_R.png",
+      "origin": [
+        218,
+        229
+      ],
+      "size": [
+        64,
+        113
+      ],
+      "pivot": [
+        21,
+        21
+      ],
+      "pivotWorld": [
+        239,
+        250
+      ],
+      "limitDeg": [
+        -60,
+        150
+      ]
+    },
+    {
+      "id": "forearm_R",
+      "parent": "upper_arm_R",
+      "z": 7,
+      "svg": "parts/forearm_R.svg",
+      "png": "parts/forearm_R.png",
+      "origin": [
+        246,
+        306
+      ],
+      "size": [
+        53,
+        132
+      ],
+      "pivot": [
+        18,
+        18
+      ],
+      "pivotWorld": [
+        264,
+        324
+      ],
+      "limitDeg": [
+        -10,
+        140
+      ]
+    }
+  ],
+  "strings": [
+    {
+      "id": "head",
+      "part": "head",
+      "anchor": [
+        116,
+        7
+      ],
+      "anchorWorld": [
+        200,
+        40
+      ],
+      "finger": "middle",
+      "mpLandmark": 12
+    },
+    {
+      "id": "hand_L",
+      "part": "forearm_L",
+      "anchor": [
+        17.92,
+        108.28
+      ],
+      "anchorWorld": [
+        118.92,
+        414.28
+      ],
+      "finger": "index",
+      "mpLandmark": 8
+    },
+    {
+      "id": "hand_R",
+      "part": "forearm_R",
+      "anchor": [
+        35.08,
+        108.28
+      ],
+      "anchorWorld": [
+        281.08,
+        414.28
+      ],
+      "finger": "ring",
+      "mpLandmark": 16
+    },
+    {
+      "id": "knee_L",
+      "part": "shin_L",
+      "anchor": [
+        42,
+        23
+      ],
+      "anchorWorld": [
+        178,
+        482
+      ],
+      "finger": "thumb",
+      "mpLandmark": 4
+    },
+    {
+      "id": "knee_R",
+      "part": "shin_R",
+      "anchor": [
+        26,
+        23
+      ],
+      "anchorWorld": [
+        222,
+        482
+      ],
+      "finger": "pinky",
+      "mpLandmark": 20
+    }
+  ]
+}

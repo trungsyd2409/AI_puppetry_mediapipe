@@ -1,0 +1,17 @@
+{
+  "size": [
+    1600,
+    900
+  ],
+  "floorY": 760,
+  "stageX": [
+    330,
+    1270
+  ],
+  "puppetHeight": 420,
+  "layers": {
+    "bg": "stage_bg.png",
+    "fg": "stage_fg.png"
+  },
+  "note": "draw bg, then puppets (feet on floorY), then fg"
+}

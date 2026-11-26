@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Puppet rig preview</title>
+<style>
+  :root { --ink:#2a140a; --panel:#f7ecd2; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.4 system-ui,sans-serif; color:var(--ink); background:#24140b;
+         display:flex; flex-wrap:wrap; gap:16px; padding:16px; justify-content:center; align-items:flex-start; }
+  canvas { width:min(1000px,100%); height:auto; border-radius:8px; background:#e9d6ad; }
+  .panel { background:var(--panel); border-radius:8px; padding:12px 14px; width:320px; max-width:100%; }
+  h1 { font-size:16px; margin:0 0 8px; }
+  label { display:grid; grid-template-columns:96px 1fr 44px; align-items:center; gap:6px; margin:4px 0; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+  button, select { border:1px solid var(--ink); background:#fff8e6; border-radius:6px; padding:6px 10px; cursor:pointer; font:inherit; }
+  button.on { background:var(--ink); color:#fff8e6; }
+</style></head>
+<body>
+<canvas id="cv" width="1600" height="900"></canvas>
+<div class="panel">
+  <h1>Test khớp rối</h1>
+  <div class="row"><select id="who"></select></div>
+  <div class="row">
+    <button id="bSway">Lắc lư</button>
+    <button id="bPivot">Hiện pivot</button>
+    <button id="bStr" class="on">Hiện dây</button>
+    <button id="bBg" class="on">Nền</button>
+    <button id="bReset">Reset</button>
+  </div>
+  <div id="sliders"></div>
+</div>
+<script>
+const PUPPETS = [{"label": "Ch\u00fa T\u1ec5u", "x": 670, "rig": {"name": "teu", "units": "design units (1 unit = 2 px in PNG); y points down; _L = viewer's left", "canvas": [400, 720], "pngScale": 2, "feetY": 656, "parts": [{"id": "torso", "parent": null, "z": 3, "svg": "parts/torso.svg", "png": "puppet/teu/parts/torso.png", "origin": [107, 179], "size": [186, 295], "pivot": [93, 121], "pivotWorld": [200, 300], "limitDeg": null}, {"id": "head", "parent": "torso", "z": 6, "svg": "parts/head.svg", "png": "puppet/teu/parts/head.png", "origin": [125, 2], "size": [150, 204], "pivot": [75, 186], "pivotWorld": [200, 188], "limitDeg": [-35, 35]}, {"id": "thigh_L", "parent": "torso", "z": 1, "svg": "parts/thigh_L.svg", "png": "puppet/teu/parts/thigh_L.png", "origin": [138, 359], "size": [67, 176], "pivot": [34, 33], "pivotWorld": [172, 392], "limitDeg": [-70, 60]}, {"id": "shin_L", "parent": "thigh_L", "z": 0, "svg": "parts/shin_L.svg", "png": "puppet/teu/parts/shin_L.png", "origin": [113, 485], "size": [75, 175], "pivot": [50, 25], "pivotWorld": [163, 510], "limitDeg": [-10, 120]}, {"id": "thigh_R", "parent": "torso", "z": 1, "svg": "parts/thigh_R.svg", "png": "puppet/teu/parts/thigh_R.png", "origin": [195, 359], "size": [67, 176], "pivot": [33, 33], "pivotWorld": [228, 392], "limitDeg": [-60, 70]}, {"id": "shin_R", "parent": "thigh_R", "z": 0, "svg": "parts/shin_R.svg", "png": "puppet/teu/parts/shin_R.png", "origin": [212, 485], "size": [75, 175], "pivot": [25, 25], "pivotWorld": [237, 510], "limitDeg": [-120, 10]}, {"id": "upper_arm_L", "parent": "torso", "z": 4, "svg": "parts/upper_arm_L.svg", "png": "puppet/teu/parts/upper_arm_L.png", "origin": [82, 187], "size": [86, 133], "pivot": [59, 27], "pivotWorld": [141, 214], "limitDeg": [-150, 60]}, {"id": "forearm_L", "parent": "upper_arm_L", "z": 5, "svg": "parts/forearm_L.svg", "png": "puppet/teu/parts/forearm_L.png", "origin": [62, 276], "size": [64, 154], "pivot": [42, 22], "pivotWorld": [104, 298], "limitDeg": [-140, 10]}, {"id": "upper_arm_R", "parent": "torso", "z": 4, "svg": "parts/upper_arm_R.svg", "png": "puppet/teu/parts/upper_arm_R.png", "origin": [232, 187], "size": [86, 133], "pivot": [27, 27], "pivotWorld": [259, 214], "limitDeg": [-60, 150]}, {"id": "forearm_R", "parent": "upper_arm_R", "z": 5, "svg": "parts/forearm_R.svg", "png": "puppet/teu/parts/forearm_R.png", "origin": [274, 276], "size": [64, 154], "pivot": [22, 22], "pivotWorld": [296, 298], "limitDeg": [-10, 140]}], "strings": [{"id": "head", "part": "head", "anchor": [75, 12], "anchorWorld": [200, 14], "finger": "middle", "mpLandmark": 12}, {"id": "hand_L", "part": "forearm_L", "anchor": [22.8, 121.84], "anchorWorld": [84.8, 397.84], "finger": "index", "mpLandmark": 8}, {"id": "hand_R", "part": "forearm_R", "anchor": [41.2, 121.84], "anchorWorld": [315.2, 397.84], "finger": "ring", "mpLandmark": 16}, {"id": "knee_L", "part": "shin_L", "anchor": [50, 25], "anchorWorld": [163, 510], "finger": "thumb", "mpLandmark": 4}, {"id": "knee_R", "part": "shin_R", "anchor": [25, 25], "anchorWorld": [237, 510], "finger": "pinky", "mpLandmark": 20}]}}, {"label": "C\u00f4 g\u00e1i \u00e1o d\u00e0i", "x": 930, "rig": {"name": "co_gai", "units": "design units (1 unit = 2 px in PNG); y points down; _L = viewer's left", "canvas": [400, 720], "pngScale": 2, "feetY": 647, "parts": [{"id": "torso", "parent": null, "z": 4, "svg": "parts/torso.svg", "png": "puppet/co_gai/parts/torso.png", "origin": [142, 216], "size": [116, 157], "pivot": [58, 74], "pivotWorld": [200, 290], "limitDeg": null}, {"id": "head", "parent": "torso", "z": 8, "svg": "parts/head.svg", "png": "puppet/co_gai/parts/head.png", "origin": [84, 33], "size": [232, 214], "pivot": [116, 199], "pivotWorld": [200, 232], "limitDeg": [-30, 30]}, {"id": "hair", "parent": "head", "z": 1, "svg": "parts/hair.svg", "png": "puppet/co_gai/parts/hair.png", "origin": [138, 144], "size": [124, 260], "pivot": [62, 24], "pivotWorld": [200, 168], "limitDeg": [-15, 15]}, {"id": "flap_back", "parent": "torso", "z": 0, "svg": "parts/flap_back.svg", "png": "puppet/co_gai/parts/flap_back.png", "origin": [128, 320], "size": [144, 291], "pivot": [72, 14], "pivotWorld": [200, 334], "limitDeg": [-20, 20]}, {"id": "flap_front", "parent": "torso", "z": 5, "svg": "parts/flap_front.svg", "png": "puppet/co_gai/parts/flap_front.png", "origin": [152, 320], "size": [96, 299], "pivot": [48, 14], "pivotWorld": [200, 334], "limitDeg": [-20, 20]}, {"id": "thigh_L", "parent": "torso", "z": 3, "svg": "parts/thigh_L.svg", "png": "puppet/co_gai/parts/thigh_L.png", "origin": [155, 326], "size": [53, 179], "pivot": [27, 26], "pivotWorld": [182, 352], "limitDeg": [-70, 60]}, {"id": "shin_L", "parent": "thigh_L", "z": 2, "svg": "parts/shin_L.svg", "png": "puppet/co_gai/parts/shin_L.png", "origin": [136, 459], "size": [68, 192], "pivot": [42, 23], "pivotWorld": [178, 482], "limitDeg": [-10, 120]}, {"id": "thigh_R", "parent": "torso", "z": 3, "svg": "parts/thigh_R.svg", "png": "puppet/co_gai/parts/thigh_R.png", "origin": [192, 326], "size": [53, 179], "pivot": [26, 26], "pivotWorld": [218, 352], "limitDeg": [-60, 70]}, {"id": "shin_R", "parent": "thigh_R", "z": 2, "svg": "parts/shin_R.svg", "png": "puppet/co_gai/parts/shin_R.png", "origin": [196, 459], "size": [68, 192], "pivot": [26, 23], "pivotWorld": [222, 482], "limitDeg": [-120, 10]}, {"id": "upper_arm_L", "parent": "torso", "z": 6, "svg": "parts/upper_arm_L.svg", "png": "puppet/co_gai/parts/upper_arm_L.png", "origin": [118, 229], "size": [64, 113], "pivot": [43, 21], "pivotWorld": [161, 250], "limitDeg": [-150, 60]}, {"id": "forearm_L", "parent": "upper_arm_L", "z": 7, "svg": "parts/forearm_L.svg", "png": "puppet/co_gai/parts/forearm_L.png", "origin": [101, 306], "size": [53, 132], "pivot": [35, 18], "pivotWorld": [136, 324], "limitDeg": [-140, 10]}, {"id": "upper_arm_R", "parent": "torso", "z": 6, "svg": "parts/upper_arm_R.svg", "png": "puppet/co_gai/parts/upper_arm_R.png", "origin": [218, 229], "size": [64, 113], "pivot": [21, 21], "pivotWorld": [239, 250], "limitDeg": [-60, 150]}, {"id": "forearm_R", "parent": "upper_arm_R", "z": 7, "svg": "parts/forearm_R.svg", "png": "puppet/co_gai/parts/forearm_R.png", "origin": [246, 306], "size": [53, 132], "pivot": [18, 18], "pivotWorld": [264, 324], "limitDeg": [-10, 140]}], "strings": [{"id": "head", "part": "head", "anchor": [116, 7], "anchorWorld": [200, 40], "finger": "middle", "mpLandmark": 12}, {"id": "hand_L", "part": "forearm_L", "anchor": [17.92, 108.28], "anchorWorld": [118.92, 414.28], "finger": "index", "mpLandmark": 8}, {"id": "hand_R", "part": "forearm_R", "anchor": [35.08, 108.28], "anchorWorld": [281.08, 414.28], "finger": "ring", "mpLandmark": 16}, {"id": "knee_L", "part": "shin_L", "anchor": [42, 23], "anchorWorld": [178, 482], "finger": "thumb", "mpLandmark": 4}, {"id": "knee_R", "part": "shin_R", "anchor": [26, 23], "anchorWorld": [222, 482], "finger": "pinky", "mpLandmark": 20}]}}], STAGE = {"size": [1600, 900], "floorY": 760, "stageX": [330, 1270], "puppetHeight": 420, "layers": {"bg": "background/stage_bg.png", "fg": "background/stage_fg.png"}, "note": "draw bg, then puppets (feet on floorY), then fg"};
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const load = src => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; });
+let bgImg = null, fgImg = null, showPivot = false, showStr = true, showBg = true, sway = false, t0 = 0, sel = 0;
+
+for (const P of PUPPETS) {
+  P.parts = Object.fromEntries(P.rig.parts.map(p => [p.id, {...p, angle: 0}]));
+  const top = Math.min(...P.rig.parts.map(p => p.origin[1]));
+  P.k = STAGE.puppetHeight / (P.rig.feetY - top);
+}
+
+function worldMatrix(P, p) {
+  let m;
+  if (p.parent) { const q = P.parts[p.parent]; m = worldMatrix(P, q).translate(p.origin[0] - q.origin[0], p.origin[1] - q.origin[1]); }
+  else m = new DOMMatrix().translate(p.origin[0], p.origin[1]);
+  return m.translate(p.pivot[0], p.pivot[1]).rotate(p.angle).translate(-p.pivot[0], -p.pivot[1]);
+}
+function base(P) {  // design space -> stage pixels, feet on the floor
+  return new DOMMatrix().translate(P.x, STAGE.floorY).scale(P.k).translate(-P.rig.canvas[0] / 2, -P.rig.feetY);
+}
+
+function draw() {
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  if (showBg && bgImg) ctx.drawImage(bgImg, 0, 0);
+  for (const P of PUPPETS) {
+    const B = base(P);
+    if (showStr) for (const s of P.rig.strings) {
+      const pt = B.multiply(worldMatrix(P, P.parts[s.part])).transformPoint(new DOMPoint(...s.anchor));
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.strokeStyle = 'rgba(40,20,10,.65)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(pt.x, 0); ctx.lineTo(pt.x, pt.y); ctx.stroke();
+    }
+    for (const p of Object.values(P.parts).sort((a, b) => a.z - b.z)) {
+      ctx.setTransform(B.multiply(worldMatrix(P, p)));
+      if (p.img) ctx.drawImage(p.img, 0, 0, p.size[0], p.size[1]);
+    }
+    if (showPivot) for (const p of Object.values(P.parts)) {
+      const pt = B.multiply(worldMatrix(P, p)).transformPoint(new DOMPoint(...p.pivot));
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.strokeStyle = '#18c08a'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, 6, 0, 7); ctx.stroke();
+    }
+  }
+  ctx.setTransform(1,0,0,1,0,0);
+  if (showBg && fgImg) ctx.drawImage(fgImg, 0, 0);
+}
+
+const who = document.getElementById('who'), box = document.getElementById('sliders');
+PUPPETS.forEach((P, i) => who.add(new Option(P.label, i)));
+function buildSliders() {
+  box.innerHTML = '';
+  for (const p of Object.values(PUPPETS[sel].parts)) {
+    if (!p.limitDeg) continue;
+    const l = document.createElement('label');
+    l.innerHTML = `<span>${p.id}</span><input type=range min=${p.limitDeg[0]} max=${p.limitDeg[1]} value=${p.angle} step=1><span>${Math.round(p.angle)}°</span>`;
+    const [, inp, val] = l.children;
+    inp.oninput = () => { p.angle = +inp.value; val.textContent = inp.value + '°'; draw(); };
+    p.ui = [inp, val];
+    box.appendChild(l);
+  }
+}
+who.onchange = () => { sel = +who.value; buildSliders(); };
+function setAngle(P, id, a) {
+  const p = P.parts[id]; if (!p) return;
+  p.angle = Math.max(p.limitDeg[0], Math.min(p.limitDeg[1], a));
+  if (p.ui && P === PUPPETS[sel]) { p.ui[0].value = p.angle; p.ui[1].textContent = Math.round(p.angle) + '°'; }
+}
+function loop() {
+  if (!sway) return;
+  const t = (performance.now() - t0) / 1000;
+  PUPPETS.forEach((P, i) => {
+    const ph = i * 1.3;
+    setAngle(P, 'head', 15 * Math.sin(t * 2 + ph));
+    setAngle(P, 'hair', -10 * Math.sin(t * 2 + ph - 0.6));
+    setAngle(P, 'upper_arm_L', -70 + 50 * Math.sin(t * 3 + ph));
+    setAngle(P, 'forearm_L', -60 + 40 * Math.sin(t * 3 + ph + 1));
+    setAngle(P, 'upper_arm_R', 70 - 50 * Math.sin(t * 3 + ph + 2));
+    setAngle(P, 'forearm_R', 60 - 40 * Math.sin(t * 3 + ph + 3));
+    setAngle(P, 'thigh_L', 20 * Math.sin(t * 3 + ph));
+    setAngle(P, 'shin_L', 30 + 30 * Math.sin(t * 3 + ph + 1));
+    setAngle(P, 'thigh_R', 20 * Math.sin(t * 3 + ph + Math.PI));
+    setAngle(P, 'shin_R', -30 - 30 * Math.sin(t * 3 + ph + 1));
+    setAngle(P, 'flap_front', 8 * Math.sin(t * 3 + ph - 0.8));
+    setAngle(P, 'flap_back', 6 * Math.sin(t * 3 + ph - 1.2));
+  });
+  draw(); requestAnimationFrame(loop);
+}
+const tog = (id, fn) => document.getElementById(id).onclick = e => { e.target.classList.toggle('on', fn()); draw(); };
+tog('bSway', () => { sway = !sway; if (sway) { t0 = performance.now(); loop(); } return sway; });
+tog('bPivot', () => (showPivot = !showPivot));
+tog('bStr', () => (showStr = !showStr));
+tog('bBg', () => (showBg = !showBg));
+document.getElementById('bReset').onclick = () => { for (const P of PUPPETS) for (const p of Object.values(P.parts)) if (p.limitDeg) setAngle(P, p.id, 0); draw(); };
+window.__pose = (i, o) => { for (const k in o) setAngle(PUPPETS[i], k, o[k]); draw(); };
+
+(async () => {
+  [bgImg, fgImg] = await Promise.all([load(STAGE.layers.bg), load(STAGE.layers.fg)]);
+  await Promise.all(PUPPETS.flatMap(P => Object.values(P.parts).map(async p => { p.img = await load(p.png); })));
+  buildSliders(); draw(); window.__ready = true;
+})();
+</script>
+</body></html>
