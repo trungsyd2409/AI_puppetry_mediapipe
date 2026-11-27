@@ -11,6 +11,9 @@ import { HandRole } from "./ropes";
 import { Rider } from "./rider";
 import { Shells } from "./shells";
 
+export const BUILD = "build 28-11 00:12 (mid-grip, tip-right)";
+console.info("[giong]", BUILD);
+
 export type GameState = "TITLE" | "OPENING" | "PLAY" | "FALL" | "CLOSING" | "RESETTING" | "GAMEOVER";
 
 export class Game {
@@ -214,6 +217,13 @@ export class Game {
   }
 
   private drawHud(ctx: CanvasRenderingContext2D) {
+    // build stamp: tells which code version the browser is running
+    ctx.save();
+    ctx.fillStyle = "rgba(36,26,20,0.55)";
+    ctx.font = "16px Georgia, serif";
+    ctx.textAlign = "left";
+    ctx.fillText(BUILD, 16, 880);
+    ctx.restore();
     for (let i = 0; i < G.lives; i++) drawSprite(ctx, this.data.fx[i < this.lives ? "life" : "life_lost"], 70 + i * 48, 175, 1.1);
     drawSprite(ctx, this.data.fx.score_plaque, 1420, 160, 0.85);
     ctx.save();
