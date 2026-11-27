@@ -214,5 +214,57 @@
       40.0
     ],
     "pngScale": 2
+  },
+  "dust_puff_0": {
+    "png": "dust_puff_0.png",
+    "size": [
+      64,
+      44
+    ],
+    "anchor": [
+      32.0,
+      22.0
+    ],
+    "pngScale": 2
+  },
+  "dust_puff_1": {
+    "png": "dust_puff_1.png",
+    "size": [
+      64,
+      44
+    ],
+    "anchor": [
+      32.0,
+      22.0
+    ],
+    "pngScale": 2
+  },
+  "curtain_panel": {
+    "png": "curtain_panel.png",
+    "size": [
+      820,
+      900
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "pngScale": 1
+  },
+  "curtain_top": {
+    "png": "curtain_top.png",
+    "size": [
+      1600,
+      190
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "pngScale": 1,
+    "plaque": [
+      800,
+      92
+    ]
   }
 }

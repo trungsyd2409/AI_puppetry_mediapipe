@@ -2,7 +2,7 @@
 
 Facing right (runs to the right). Canvas 720 x 640 design units, hooves on y=600.
 Strings:
-  left hand  middle -> bamboo top (leafy) end, index -> bamboo bottom end
+  left hand  index -> bamboo top (leafy) end, middle -> bamboo bottom end
   right hand index  -> near front leg (below knee), middle -> far front leg
 """
 import math, os, sys
@@ -335,7 +335,7 @@ def main():
         ("front_near_lower", "front_near_upper", 5, leg_lower(FN, False), FN["kn"], (-120, 10)),
         ("neck", "body", 6, horse_neck_head(), NECK_BASE, (-30, 25)),
         ("boy_arm_far_upper", "boy_torso", 7, boy_g(arm_upper(SHO_F, ELB_F, True)), S(SHO_F), (-120, 120)),
-        ("boy_arm_far_fore", "boy_arm_far_upper", 10, boy_g(arm_fore(ELB_F, WRI_F, True)), S(ELB_F), (-150, 20)),
+        ("boy_arm_far_fore", "boy_arm_far_upper", 7, boy_g(arm_fore(ELB_F, WRI_F, True)), S(ELB_F), (-150, 20)),
         ("boy_torso", "body", 8, boy_g(boy_torso()), S(HIP), (-25, 25)),
         ("boy_head", "boy_torso", 9, boy_g(boy_head()), S(NECK), (-30, 30)),
         ("boy_thigh", "boy_torso", 10, boy_g(boy_thigh()), S(HIP), (-30, 30)),
@@ -349,8 +349,8 @@ def main():
              for i, par, z, svg, pv, lim in parts]
     kn_off = 22  # string anchor a bit below the knee
     strings = [
-        ("bamboo_top", "bamboo", bam_at(0.97), "left", "middle", 12),
-        ("bamboo_bottom", "bamboo", bam_at(0.03), "left", "index", 8),
+        ("bamboo_top", "bamboo", bam_at(0.97), "left", "index", 8),
+        ("bamboo_bottom", "bamboo", bam_at(0.03), "left", "middle", 12),
         ("front_near", "front_near_lower", (FN["kn"][0], FN["kn"][1] + kn_off), "right", "index", 8),
         ("front_far", "front_far_lower", (FF["kn"][0], FF["kn"][1] + kn_off), "right", "middle", 12),
     ]
@@ -377,6 +377,7 @@ def main():
         "gripNear": list(sh(S(WRI_N))), "gripFar": list(sh(S(WRI_F))),
         "bambooEnds": [list(sh(BAM_A)), list(sh(BAM_B))],
         "runLegs": ["front_near", "front_far", "hind_near", "hind_far"],
+        "tailRoot": list(sh(TAIL_ROOT)),
     }
     rig = build(OUT, "giong", (W, H), parts, strings, colliders, extra)
     print("parts:", len(rig["parts"]), "feetY", rig["feetY"])

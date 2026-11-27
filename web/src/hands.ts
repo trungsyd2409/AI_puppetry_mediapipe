@@ -33,7 +33,7 @@ export class CameraHands implements HandSource {
   constructor(video: HTMLVideoElement) { this.video = video; }
 
   async init(onStatus: (s: string) => void) {
-    onStatus("Đang xin quyền camera...");
+    onStatus("Asking for camera permission...");
     this.stream = await navigator.mediaDevices.getUserMedia({
       video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" }, audio: false,
     });
@@ -42,7 +42,7 @@ export class CameraHands implements HandSource {
     this.video.playsInline = true;
     await this.video.play();
 
-    onStatus("Đang tải mô hình MediaPipe...");
+    onStatus("Loading the MediaPipe model...");
     const vision = await FilesetResolver.forVisionTasks(`${BASE}mediapipe/wasm`);
     const local = `${BASE}models/hand_landmarker.task`;
     // dev servers answer missing files with index.html, so check the content type too

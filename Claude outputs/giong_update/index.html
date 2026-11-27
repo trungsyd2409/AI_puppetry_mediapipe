@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Thánh Gióng</title>
+</head>
+<body>
+  <main class="app">
+    <div class="stage-wrap">
+      <canvas id="stage" width="1200" height="1200"></canvas>
+      <div id="overlay" class="overlay">
+        <div class="card">
+          <h1>Thánh Gióng</h1>
+          <p>A boy rides a horse with a bamboo pole while fire stones fly in from the front. Swing the bamboo to block them, or pull the horse's legs so it rears and stamps them out.</p>
+          <div class="buttons">
+            <button id="btnCamera" class="primary">Use camera</button>
+            <button id="btnMouse">Use mouse (test)</button>
+          </div>
+          <p id="status" class="status">Loading...</p>
+          <p class="hint">Left hand: index → bamboo tip, middle → bamboo base<br>Right hand: index → near front leg, middle → far front leg<br>Keys: C camera · M mouse · Enter start · D hit boxes</p>
+        </div>
+      </div>
+    </div>
+    <video id="video" playsinline muted></video>
+  </main>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

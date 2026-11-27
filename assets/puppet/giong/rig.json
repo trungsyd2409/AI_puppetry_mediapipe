@@ -446,7 +446,7 @@
     {
       "id": "boy_arm_far_fore",
       "parent": "boy_arm_far_upper",
-      "z": 10,
+      "z": 7,
       "svg": "parts/boy_arm_far_fore.svg",
       "png": "parts/boy_arm_far_fore.png",
       "origin": [
@@ -721,8 +721,8 @@
         87.62
       ],
       "hand": "left",
-      "finger": "middle",
-      "mpLandmark": 12
+      "finger": "index",
+      "mpLandmark": 8
     },
     {
       "id": "bamboo_bottom",
@@ -736,8 +736,8 @@
         393.92
       ],
       "hand": "left",
-      "finger": "index",
-      "mpLandmark": 8
+      "finger": "middle",
+      "mpLandmark": 12
     },
     {
       "id": "front_near",
@@ -794,5 +794,9 @@
     "front_far",
     "hind_near",
     "hind_far"
+  ],
+  "tailRoot": [
+    196,
+    378
   ]
 }

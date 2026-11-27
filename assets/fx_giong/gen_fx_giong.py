@@ -169,6 +169,70 @@ def score_plaque():
     return out
 
 
+# ---------- single hoof-dust puff (particles are spawned by code at each hoof strike) ----------
+def dust_puff(k):
+    d = ["M-22,4 C-26,-12 -8,-22 2,-14 C10,-24 28,-16 24,-2 C30,8 18,14 8,10 C0,16 -14,14 -18,8 C-26,10 -28,6 -22,4 Z",
+         "M-20,2 C-22,-14 -4,-18 4,-10 C14,-18 26,-8 22,4 C24,12 12,14 4,10 C-4,14 -16,12 -20,2 Z"][k]
+    curl = ["M-8,0 C-10,-8 0,-10 2,-4 C3,0 -1,1 -3,-1", "M6,-2 C4,-9 14,-10 15,-4 C15,0 12,1 10,-1"][k]
+    return ink(d, "#D9B67C", 2.0) + line(curl, 1.4, "#8E6633")
+
+
+# ---------- stage curtain (man the) in Dong Ho style ----------
+CW, CH = 820, 900
+
+
+def curtain_panel():
+    """Left panel; the right one is the same image mirrored by code. Inner edge is on the right."""
+    body = f"M0,0 L{CW},0 L{CW},{CH} L0,{CH} Z"
+    out = f'<path d="{body}" fill="{SON}"/>'
+    # folds: soft vertical brush lines, darker bands between
+    for i in range(9):
+        x = 40 + i * 88
+        out += f'<path d="M{x+18},0 C{x+30},300 {x+8},600 {x+22},{CH} L{x+44},{CH} C{x+30},600 {x+52},300 {x+40},0 Z" fill="{SON_DARK}"/>'
+        out += line(f"M{x},0 C{x+12},300 {x-10},600 {x+4},{CH-60}", 2.6)
+    # inner edge band: green with ivory spirals
+    out += ink(f"M{CW-70},0 L{CW},0 L{CW},{CH} L{CW-70},{CH} Z", LA, 3.4)
+    for j in range(10):
+        out += spiral(CW - 35, 50 + j * 86, 16, 1.6, j * 40, TRANG, 2.6, 1 if j % 2 else -1)
+    # bottom band: ochre with red spirals and a lotus row
+    out += ink(f"M0,{CH-150} L{CW},{CH-150} L{CW},{CH-70} L0,{CH-70} Z", VANG, 3.4)
+    for j in range(10):
+        out += spiral(40 + j * 80, CH - 110, 18, 1.5, j * 30, SON_DARK, 2.6)
+    # fringe with tassels
+    out += ink(f"M0,{CH-70} L{CW},{CH-70} L{CW},{CH-52} L0,{CH-52} Z", LA_DARK, 2.4)
+    for j in range(20):
+        out += tassel(20 + j * 41, CH - 52, 1.1, SON if j % 2 else VANG)
+    # small cloud motifs on the cloth
+    for x, y in ((180, 260), (520, 420), (300, 600)):
+        out += swirl(x, y, 1.6, 0, sw=3.0, color=VANG)
+    return out
+
+
+def curtain_top():
+    """Valance across the top with a blank plaque in the middle (title text drawn by code)."""
+    W2, H2 = 1600, 190
+    d = f"M0,0 L{W2},0 L{W2},120 "
+    n = 16
+    for i in range(n, 0, -1):
+        x0 = W2 * i / n
+        x1 = W2 * (i - 1) / n
+        d += f"Q{(x0+x1)/2:.1f},175 {x1:.1f},120 "
+    d += "Z"
+    out = ink(d, LA, 3.6)
+    out += ink(f"M0,0 L{W2},0 L{W2},28 L0,28 Z", SON, 3.0)
+    out += dots_row((0, 14), (W2, 14), 40, 3, VANG)
+    for i in range(n):
+        out += spiral(W2 * (i + 0.5) / n, 112, 14, 1.5, i * 25, TRANG, 2.4, 1 if i % 2 else -1)
+    # plaque
+    px, py, pw, ph = 800, 92, 300, 64
+    out += ink(f"M{px-pw/2-20},{py} L{px-pw/2},{py-ph/2} L{px+pw/2},{py-ph/2} L{px+pw/2+20},{py} "
+               f"L{px+pw/2},{py+ph/2} L{px-pw/2},{py+ph/2} Z", SON, 3.6)
+    out += line(f"M{px-pw/2-6},{py} L{px-pw/2+8},{py-ph/2+8} L{px+pw/2-8},{py-ph/2+8} L{px+pw/2+6},{py} "
+                f"L{px+pw/2-8},{py+ph/2-8} L{px-pw/2+8},{py+ph/2-8} Z", 1.6, VANG, 'stroke-dasharray="7 5"')
+    out += cloud_puff(px - pw / 2 - 70, py, 0.5) + cloud_puff(px + pw / 2 + 70, py, 0.5)
+    return out
+
+
 def main():
     save("shell", shell(), 64, 64)
     for k in range(3):
@@ -183,6 +247,13 @@ def main():
     save("life", life_icon(), 40, 84)
     save("life_lost", life_lost(), 40, 84)
     save("score_plaque", score_plaque(), 360, 80)
+    for k in range(2):
+        save(f"dust_puff_{k}", dust_puff(k), 64, 44)
+    write_svg_png(os.path.join(OUT, "curtain_panel"), curtain_panel(), (0, 0, CW, CH), 1)
+    MANIFEST["curtain_panel"] = {"png": "curtain_panel.png", "size": [CW, CH], "anchor": [0, 0], "pngScale": 1}
+    write_svg_png(os.path.join(OUT, "curtain_top"), curtain_top(), (0, 0, 1600, 190), 1)
+    MANIFEST["curtain_top"] = {"png": "curtain_top.png", "size": [1600, 190], "anchor": [0, 0], "pngScale": 1,
+                               "plaque": [800, 92]}
     with open(os.path.join(OUT, "fx.json"), "w") as f:
         json.dump(MANIFEST, f, indent=2)
     print(len(MANIFEST), "sprites")
