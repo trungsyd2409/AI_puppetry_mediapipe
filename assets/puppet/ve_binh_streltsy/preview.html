@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ve binh Streltsy rig</title>
+<style>
+  body { margin:0; font:14px system-ui,sans-serif; background:#1c2433; color:#1e2a3a; display:flex; flex-wrap:wrap;
+         gap:16px; padding:16px; justify-content:center; align-items:flex-start; }
+  canvas { background:radial-gradient(circle at 50% 35%, #f3f6fb, #d7e2ef 70%); border-radius:8px; max-width:100%; height:auto; }
+  .panel { background:#eef3f9; border-radius:8px; padding:12px 14px; width:320px; max-width:100%; }
+  label { display:grid; grid-template-columns:100px 1fr 44px; gap:6px; align-items:center; margin:4px 0; }
+  button { border:1px solid #1e3a6e; background:#fff; border-radius:6px; padding:6px 10px; cursor:pointer; margin:0 6px 8px 0; }
+  button.on { background:#1e3a6e; color:#fff; }
+</style></head><body>
+<canvas id="cv" width="800" height="1440"></canvas>
+<div class="panel"><b>Vệ binh Streltsy: test khớp</b><div style="margin-top:8px">
+<button id="sway">Lắc lư</button><button id="piv">Pivot</button><button id="reset">Reset</button></div>
+<div id="sl"></div></div>
+<script>
+const RIG = {"name": "ve_binh_streltsy", "units": "design units (1 unit = 2 px in PNG); y points down; _L = viewer's left; colliders are relative to the part pivot", "canvas": [400, 720], "pngScale": 2, "feetY": 656, "parts": [{"id": "torso", "parent": null, "z": 4, "svg": "parts/torso.svg", "png": "parts/torso.png", "origin": [144, 170], "size": [112, 225], "pivot": [56, 110], "pivotWorld": [200, 280], "limitDeg": null, "density": 1.0, "colliders": [{"type": "capsule", "a": [0, -44], "b": [0, 38], "r": 40}]}, {"id": "head", "parent": "torso", "z": 11, "svg": "parts/head.svg", "png": "parts/head.png", "origin": [140, 28], "size": [120, 207], "pivot": [60, 162], "pivotWorld": [200, 190], "limitDeg": [-30, 30], "density": 0.8, "colliders": [{"type": "circle", "c": [0, -48], "r": 38}, {"type": "capsule", "a": [-32, -106], "b": [32, -106], "r": 30}]}, {"id": "braid", "parent": "head", "z": 7, "svg": "parts/braid.svg", "png": "parts/braid.png", "origin": [213, 151], "size": [49, 233], "pivot": [13, 9], "pivotWorld": [226, 160], "limitDeg": [-25, 25], "density": 0.25, "colliders": [{"type": "capsule", "a": [4, 15], "b": [14, 205], "r": 12}]}, {"id": "skirt", "parent": "torso", "z": 5, "svg": "parts/skirt.svg", "png": "parts/skirt.png", "origin": [130, 325], "size": [140, 260], "pivot": [70, 9], "pivotWorld": [200, 334], "limitDeg": [-12, 12], "density": 0.3, "colliders": [{"type": "capsule", "a": [0, 56], "b": [0, 206], "r": 46}]}, {"id": "thigh_L", "parent": "torso", "z": 2, "svg": "parts/thigh_L.svg", "png": "parts/thigh_L.png", "origin": [159, 348], "size": [49, 173], "pivot": [25, 24], "pivotWorld": [184, 372], "limitDeg": [-70, 60], "density": 1.0, "colliders": [{"type": "capsule", "a": [0, 0], "b": [-4, 128], "r": 16}]}, {"id": "shin_L", "parent": "thigh_L", "z": 1, "svg": "parts/shin_L.svg", "png": "parts/shin_L.png", "origin": [124, 479], "size": [78, 181], "pivot": [56, 21], "pivotWorld": [180, 500], "limitDeg": [-10, 120], "density": 1.0, "colliders": [{"type": "capsule", "a": [0, 0], "b": [-2, 122], "r": 14}, {"type": "capsule", "a": [2, 142], "b": [-42, 144], "r": 9}]}, {"id": "thigh_R", "parent": "torso", "z": 2, "svg": "parts/thigh_R.svg", "png": "parts/thigh_R.png", "origin": [192, 348], "size": [49, 173], "pivot": [24, 24], "pivotWorld": [216, 372], "limitDeg": [-60, 70], "density": 1.0, "colliders": [{"type": "capsule", "a": [0, 0], "b": [4, 128], "r": 16}]}, {"id": "shin_R", "parent": "thigh_R", "z": 1, "svg": "parts/shin_R.svg", "png": "parts/shin_R.png", "origin": [198, 479], "size": [78, 181], "pivot": [22, 21], "pivotWorld": [220, 500], "limitDeg": [-120, 10], "density": 1.0, "colliders": [{"type": "capsule", "a": [0, 0], "b": [2, 122], "r": 14}, {"type": "capsule", "a": [-2, 142], "b": [42, 144], "r": 9}]}, {"id": "upper_arm_L", "parent": "torso", "z": 8, "svg": "parts/upper_arm_L.svg", "png": "parts/upper_arm_L.png", "origin": [112, 204], "size": [68, 118], "pivot": [48, 20], "pivotWorld": [160, 224], "limitDeg": [-150, 60], "density": 1.0, "colliders": [{"type": "capsule", "a": [0, 0], "b": [-30, 80], "r": 12}]}, {"id": "forearm_L", "parent": "upper_arm_L", "z": 10, "svg": "parts/forearm_L.svg", "png": "parts/forearm_L.png", "origin": [96, 286], "size": [52, 140], "pivot": [34, 18], "pivotWorld": [130, 304], "limitDeg": [-140, 10], "density": 1.0, "colliders": [{"type": "capsule", "a": [0, 0], "b": [-18.2, 106.6], "r": 10}]}, {"id": "upper_arm_R", "parent": "torso", "z": 8, "svg": "parts/upper_arm_R.svg", "png": "parts/upper_arm_R.png", "origin": [220, 204], "size": [68, 118], "pivot": [20, 20], "pivotWorld": [240, 224], "limitDeg": [-60, 150], "density": 1.0, "colliders": [{"type": "capsule", "a": [0, 0], "b": [30, 80], "r": 12}]}, {"id": "forearm_R", "parent": "upper_arm_R", "z": 9, "svg": "parts/forearm_R.svg", "png": "parts/forearm_R.png", "origin": [252, 286], "size": [52, 140], "pivot": [18, 18], "pivotWorld": [270, 304], "limitDeg": [-10, 140], "density": 1.0, "colliders": [{"type": "capsule", "a": [0, 0], "b": [18.2, 106.6], "r": 10}]}, {"id": "saber", "parent": "forearm_L", "z": 6, "svg": "parts/saber.svg", "png": "parts/saber.png", "origin": [63, 98], "size": [74, 387], "pivot": [52, 296], "pivotWorld": [115, 394], "limitDeg": [-20, 20], "density": 0.4, "colliders": [{"type": "capsule", "a": [0, -30], "b": [-14, -180], "r": 7}, {"type": "capsule", "a": [-14, -180], "b": [-46, -290], "r": 6}]}], "strings": [{"id": "head", "part": "head", "anchor": [60, 16], "anchorWorld": [200, 44], "finger": "middle", "mpLandmark": 12}, {"id": "hand_L", "part": "forearm_L", "anchor": [16.92, 118.04], "anchorWorld": [112.92, 404.04], "finger": "index", "mpLandmark": 8}, {"id": "hand_R", "part": "forearm_R", "anchor": [35.08, 118.04], "anchorWorld": [287.08, 404.04], "finger": "ring", "mpLandmark": 16}, {"id": "knee_L", "part": "shin_L", "anchor": [56, 21], "anchorWorld": [180, 500], "finger": "thumb", "mpLandmark": 4}, {"id": "knee_R", "part": "shin_R", "anchor": [22, 21], "anchorWorld": [220, 500], "finger": "pinky", "mpLandmark": 20}]};
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d'), S = RIG.pngScale;
+const P = Object.fromEntries(RIG.parts.map(p => [p.id, {...p, angle: 0, img: new Image()}]));
+let n = 0, sway = false, piv = false, t0 = 0;
+for (const p of Object.values(P)) { p.img.onload = () => { if (++n === RIG.parts.length) draw(); }; p.img.src = p.png; }
+function M(p) {
+  let m = p.parent ? M(P[p.parent]).translate(p.origin[0] - P[p.parent].origin[0], p.origin[1] - P[p.parent].origin[1])
+                   : new DOMMatrix().translate(p.origin[0], p.origin[1]);
+  return m.translate(p.pivot[0], p.pivot[1]).rotate(p.angle).translate(-p.pivot[0], -p.pivot[1]);
+}
+function draw() {
+  ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height);
+  const base = new DOMMatrix().scale(S, S);
+  for (const p of Object.values(P).sort((a,b) => a.z - b.z)) { ctx.setTransform(base.multiply(M(p))); ctx.drawImage(p.img, 0, 0, p.size[0], p.size[1]); }
+  if (piv) for (const p of Object.values(P)) { const q = base.multiply(M(p)).transformPoint(new DOMPoint(...p.pivot));
+    ctx.setTransform(1,0,0,1,0,0); ctx.strokeStyle = '#e11d48'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(q.x, q.y, 9, 0, 7); ctx.stroke(); }
+}
+const sl = document.getElementById('sl');
+for (const p of Object.values(P)) { if (!p.limitDeg) continue;
+  const l = document.createElement('label');
+  l.innerHTML = `<span>${p.id}</span><input type=range min=${p.limitDeg[0]} max=${p.limitDeg[1]} value=0><span>0°</span>`;
+  const [, i, v] = l.children; i.oninput = () => { p.angle = +i.value; v.textContent = i.value + '°'; draw(); }; p.ui = [i, v]; sl.appendChild(l); }
+const set = (id, a) => { const p = P[id]; p.angle = Math.max(p.limitDeg[0], Math.min(p.limitDeg[1], a)); p.ui[0].value = p.angle; p.ui[1].textContent = Math.round(p.angle) + '°'; };
+function loop() { if (!sway) return; const t = (performance.now() - t0) / 1000;
+  set('head', 12*Math.sin(t*2)); set('braid', -14*Math.sin(t*2-0.6)); set('upper_arm_L', -60+45*Math.sin(t*3));
+  set('forearm_L', -50+35*Math.sin(t*3+1)); set('upper_arm_R', 40-30*Math.sin(t*3+2)); set('forearm_R', 40-30*Math.sin(t*3+3));
+  set('saber', 14*Math.sin(t*3+2.5)); set('skirt', 6*Math.sin(t*3-0.8));
+  set('thigh_L', 15*Math.sin(t*3)); set('shin_L', 25+25*Math.sin(t*3+1)); set('thigh_R', 15*Math.sin(t*3+Math.PI)); set('shin_R', -25-25*Math.sin(t*3+1));
+  draw(); requestAnimationFrame(loop); }
+document.getElementById('sway').onclick = e => { sway = !sway; e.target.classList.toggle('on', sway); if (sway) { t0 = performance.now(); loop(); } };
+document.getElementById('piv').onclick = e => { piv = !piv; e.target.classList.toggle('on', piv); draw(); };
+document.getElementById('reset').onclick = () => { for (const p of Object.values(P)) if (p.limitDeg) set(p.id, 0); draw(); };
+window.__pose = o => { for (const k in o) set(k, o[k]); draw(); };
+</script></body></html>

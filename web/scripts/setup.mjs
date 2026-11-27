@@ -26,14 +26,23 @@ function copyPuppets() {
       if (f.endsWith(".png")) cpSync(join(dir, "parts", f), join(dst, "puppet", name, "parts", f));
     ids.push(name);
   }
-  const bg = join(ASSETS, "background");
-  mkdirSync(join(dst, "background", "props"), { recursive: true });
-  for (const f of readdirSync(bg))
-    if (f.endsWith(".png") || f.endsWith(".json")) cpSync(join(bg, f), join(dst, "background", f));
-  for (const f of readdirSync(join(bg, "props")))
-    if (f.endsWith(".png")) cpSync(join(bg, "props", f), join(dst, "background", "props", f));
+  // every assets/<folder>/stage.json is a scene background
+  const scenes = [];
+  for (const name of readdirSync(ASSETS)) {
+    const dir = join(ASSETS, name);
+    if (!statSync(dir).isDirectory() || !existsSync(join(dir, "stage.json"))) continue;
+    mkdirSync(join(dst, name), { recursive: true });
+    for (const f of readdirSync(dir))
+      if (f.endsWith(".png") || f.endsWith(".json")) cpSync(join(dir, f), join(dst, name, f));
+    if (existsSync(join(dir, "props"))) {
+      mkdirSync(join(dst, name, "props"), { recursive: true });
+      for (const f of readdirSync(join(dir, "props")))
+        if (f.endsWith(".png")) cpSync(join(dir, "props", f), join(dst, name, "props", f));
+    }
+    scenes.push(name);
+  }
   writeFileSync(join(dst, "puppets.json"), JSON.stringify(ids, null, 2));
-  console.log(`[setup] assets copied: ${ids.join(", ")} + background`);
+  console.log(`[setup] assets copied: puppets ${ids.join(", ")}; scenes ${scenes.join(", ")}`);
 }
 
 function copyWasm() {

@@ -12,6 +12,7 @@ import {
 import { CFG, type Pt } from "./config";
 import type { PuppetAsset, RigPart, RigString, Shape, Stage } from "./assets";
 import { CAT_PUPPET, CAT_WORLD, m, px } from "./physics";
+import type { FixtureTag } from "./combat";
 import { PointFilter } from "./filter";
 
 export type PuppetState = "DETACHED" | "REATTACHING" | "ATTACHED";
@@ -64,6 +65,7 @@ export class Puppet {
   private filters = Array.from({ length: 6 }, () => new PointFilter(CFG.euro.minCutoff, CFG.euro.beta, CFG.euro.dCutoff));
   private lastSample = 0;
   private detachedAt = -Infinity;
+  private staggerT = 0;
   private droppedTips: Pt[] = [];
 
   constructor(private world: World, asset: PuppetAsset, private stage: Stage, homeX: number, label: string) {
@@ -113,6 +115,8 @@ export class Puppet {
           body.createFixture(new CircleShape(b, r), fix);
         }
       }
+      const tag: FixtureTag = { puppet: this, part: def.id, weapon: CFG.combat.weapons.includes(def.id) };
+      for (let f = body.getFixtureList(); f; f = f.getNext()) f.setUserData(tag);
       const rt: PartRT = { def, body, img: asset.images.get(def.id)! };
       this.parts.push(rt);
       this.byId.set(def.id, rt);
@@ -185,6 +189,7 @@ export class Puppet {
   // ---------------------------------------------------------------- state
   update(dt: number, now: number) {
     this.stateTime += dt;
+    this.staggerT = Math.max(0, this.staggerT - dt);
     const present = now - this.lastSeen < CFG.loseAfter * 1000;
     if (this.state !== "DETACHED" && !present) this.detach(now);
     else if (this.state === "DETACHED" && this.seenFrames >= CFG.attachFrames && this.control) this.reattach();
@@ -230,10 +235,11 @@ export class Puppet {
    *  fingertip and every other anchor sits at its rest-pose offset from the head. */
   private reattach() {
     const c = this.control!;
-    const L = CFG.rope.lengthOfScreen * this.stage.size[0];   // screen height in stage px
-    // Left and right hands are mirror images, so the finger -> limb wiring depends on which
-    // hand (and which way it faces). The index/thumb side of the palm drives the hand/knee on
-    // that same side of the screen, the ring/pinky side drives the other one: no crossed strings.
+    const screenH = this.stage.size[0];   // screen height in stage px (the stage spans the screen width)
+    // Wiring depends on which hand is used:
+    //   right hand: index -> left hand, thumb -> left knee, ring -> right hand, pinky -> right knee
+    //   left hand:  the mirror image
+    // ("left" = the puppet's limb on the left of the screen)
     const indexRight = c.indexRight;
     for (const [inner, outer] of [[1, 3], [0, 4]]) {          // [index, ring], [thumb, pinky]
       const ss = this.strings.filter((st) => st.defSlot === inner || st.defSlot === outer);
@@ -242,12 +248,19 @@ export class Puppet {
       ss[0].slot = indexRight ? outer : inner;
       ss[1].slot = indexRight ? inner : outer;
     }
+    const { lengths, slack, mode } = CFG.rope;
     const head = this.strings.find((st) => st.isHead)!;
-    const headPos = { x: c.tips[head.slot].x, y: c.tips[head.slot].y + L };
+    const headPos = { x: c.tips[head.slot].x, y: c.tips[head.slot].y + lengths.middle * screenH };
     for (const st of this.strings) {
-      const want = { x: headPos.x + st.restRel.x, y: headPos.y + st.restRel.y };
-      const tip = c.tips[st.slot];
-      st.restLen = Math.hypot(want.x - tip.x, want.y - tip.y);
+      const group = st.slot === 2 ? "middle" : st.slot === 1 || st.slot === 3 ? "indexRing" : "thumbPinky";
+      if (mode === "fixed") {
+        st.restLen = lengths[group] * screenH;
+      } else {
+        // length that holds the puppet in its rest pose under the head, plus some slack
+        const want = { x: headPos.x + st.restRel.x, y: headPos.y + st.restRel.y };
+        const tip = c.tips[st.slot];
+        st.restLen = Math.hypot(want.x - tip.x, want.y - tip.y) + (group === "middle" ? 0 : slack[group] * screenH);
+      }
       st.len = st.restLen;
       st.startLen = null;
     }
@@ -257,7 +270,7 @@ export class Puppet {
   // ---------------------------------------------------------------- physics
   /** Call before every fixed physics step. */
   applyForces() {
-    const s = this.strength;
+    const s = this.strength * (this.staggerT > 0 ? CFG.combat.staggerStrength : 1);
     if (s <= 0 || !this.control) return;
     const r = CFG.rope;
     for (const st of this.strings) {
@@ -284,6 +297,18 @@ export class Puppet {
     if (th < -Math.PI) th += 2 * Math.PI;
     const { kp, kd, radius } = CFG.upright;
     tb.applyTorque(s * this.totalMass * radius * radius * (-kp * th - kd * tb.getAngularVelocity()), true);
+  }
+
+  /** Hit by a weapon: throw the whole puppet along `dir` at `speed` m/s and slacken the strings. */
+  knockback(hitBody: Body, point: Vec2, dir: { x: number; y: number }, speed: number) {
+    for (const p of this.parts) {
+      const share = p.body === hitBody ? 1.4 : 1;
+      p.body.applyLinearImpulse(Vec2(dir.x * speed * p.body.getMass() * share, dir.y * speed * p.body.getMass() * share),
+        p.body === hitBody ? point : p.body.getWorldCenter(), true);
+    }
+    const tb = this.torso.body;
+    tb.applyAngularImpulse(Math.sign(dir.x) * 0.6 * speed * tb.getInertia(), true);
+    this.staggerT = CFG.combat.staggerTime;
   }
 
   /** Horizontal wind push (m/s^2 on every part). */

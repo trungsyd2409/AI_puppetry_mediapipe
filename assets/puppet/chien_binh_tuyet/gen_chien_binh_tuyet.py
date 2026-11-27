@@ -6,11 +6,10 @@ Same skeleton and string layout as the other puppets, plus swinging parts:
   skirt   white/blue ball-gown skirt (child of torso)
   spear   silver spear held in the right hand (child of forearm_R)
 
-Kept in assets/puppet/_draft/ so the web app does not load it yet. To use it in the app,
-move the folder up to assets/puppet/chien_binh_tuyet/.
+Used by the web app's default "snow" scene.
 """
 import json, math, os, sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from puppet_lib import *  # noqa
 
 OUT = os.path.dirname(os.path.abspath(__file__))

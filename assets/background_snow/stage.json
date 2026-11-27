@@ -1,0 +1,62 @@
+{
+  "scene": "snow",
+  "size": [
+    1600,
+    900
+  ],
+  "floorY": 760,
+  "stageX": [
+    330,
+    1270
+  ],
+  "puppetHeight": 470,
+  "layers": {
+    "sky": "stage_sky.png",
+    "bg": "stage_bg.png",
+    "fg": "stage_fg.png"
+  },
+  "props": {},
+  "poles": [
+    {
+      "x": 300,
+      "top": 432,
+      "side": 1
+    },
+    {
+      "x": 980,
+      "top": 544,
+      "side": 1
+    },
+    {
+      "x": 1360,
+      "top": 451,
+      "side": 1
+    }
+  ],
+  "fire": {
+    "x": 1130,
+    "y": 762
+  },
+  "tentGlows": [
+    {
+      "x": 300,
+      "y": 699.5,
+      "r": 105.0
+    },
+    {
+      "x": 980,
+      "y": 696.5,
+      "r": 52.5
+    },
+    {
+      "x": 1360,
+      "y": 706.0,
+      "r": 98.0
+    }
+  ],
+  "aurora": {
+    "y0": 110,
+    "y1": 330
+  },
+  "note": "web order: sky, aurora, bg, far snow, flags, fire, puppet, near snow, fg, wind"
+}

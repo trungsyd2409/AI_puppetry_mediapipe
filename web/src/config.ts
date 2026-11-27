@@ -1,5 +1,15 @@
 // All tunable numbers in one place. Physics/stage units are pixels of the 1600 x 900 stage art;
 // the screen shows that stage scaled into the bottom half of a square canvas.
+export interface SceneCfg { title: string; background: string; puppets: string[]; fx: "snow" | "thuydinh"; accent: string }
+
+export const SCENES: Record<string, SceneCfg> = {
+  // default: snow-mountain camp, winter warrior (left hand) and Streltsy guard (right hand)
+  snow: { title: "Chiến binh tuyết", background: "background_snow", puppets: ["chien_binh_tuyet", "ve_binh_streltsy"], fx: "snow", accent: "#BFD7F2" },
+  // the water-puppet pavilion with Chu Teu and the ao dai girl: open with ?scene=thuydinh
+  thuydinh: { title: "Rối Thủy Đình", background: "background", puppets: ["teu", "co_gai"], fx: "thuydinh", accent: "#E2B44A" },
+};
+export const DEFAULT_SCENE = "snow";
+
 export const CFG = {
   // physics
   ppm: 100,              // stage pixels per physics metre
@@ -28,7 +38,12 @@ export const CFG = {
 
   // strings = ropes of fixed length with a little stretch
   rope: {
-    lengthOfScreen: 0.3,   // head string length as a fraction of the screen height
+    // "fixed": every rope has its own fixed length (fractions of the screen height below)
+    // "slack": head rope = lengths.middle; the other ropes are measured so the puppet hangs in its
+    //          rest pose, then given extra slack so the limbs move freely
+    mode: "slack" as "fixed" | "slack",
+    lengths: { middle: 0.3, indexRing: 0.25, thumbPinky: 0.2 },
+    slack: { indexRing: 0.03, thumbPinky: 0.06 },
     omega: 16,             // stiffness of the head rope (rad/s); higher = less stretch
     limbOmega: 13,         // stiffness of the hand/knee ropes
     zeta: 0.6,             // damping along the rope
@@ -36,6 +51,9 @@ export const CFG = {
     attachedDamping: 1.1,  // air drag while hanging, stops endless pendulum swinging
   },
   upright: { kp: 25, kd: 6, radius: 0.7 },
+  // MediaPipe labels hands as if the image were mirrored; our webcam frames are not, so the
+  // label is flipped once. If left/right still come out swapped on your webcam, set this to true.
+  swapHandedness: false,
 
   // living background
   ambience: {
@@ -44,6 +62,18 @@ export const CFG = {
     gustEvery: [9, 16],      // s between gusts of wind
     gustDuration: 4,         // s
     windAccel: 3,            // m/s^2 pushed on the puppets at the peak of a gust
+  },
+
+  // weapon fights between puppets
+  combat: {
+    weapons: ["spear", "saber"],   // rig part ids that count as weapons
+    minHitSpeed: 2.0,              // m/s relative speed for a touch to count as a hit
+    fullHitSpeed: 9,               // m/s for the strongest hit
+    cooldown: 0.35,                // s between two hits of the same attacker on the same target
+    knockback: { min: 3, max: 9 }, // m/s given to the target
+    staggerTime: 0.45,             // s the target's strings stay slack after a hit
+    staggerStrength: 0.15,         // string strength while staggered
+    shakePx: 10,                   // screen shake at the strongest hit
   },
 
   // landmark smoothing (One Euro filter, stage pixels)

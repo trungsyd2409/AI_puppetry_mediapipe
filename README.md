@@ -7,6 +7,15 @@ assets/   art rối (rig.json + mảnh PNG) và sân khấu, kèm script Python 
 web/      web app: Vite + TypeScript + MediaPipe Tasks Vision + Planck.js (vật lý) + Canvas 2D
 ```
 
+## Cảnh (scene)
+
+| Cảnh | Mở bằng | Rối | Hiệu ứng |
+|---|---|---|---|
+| Núi tuyết (mặc định) | `http://localhost:5173` | Chiến binh tuyết (thương), vệ binh Streltsy (kiếm) | tuyết rơi, gió lạnh, cờ lều bay, lửa trại, khói, cực quang |
+| Thủy đình | `http://localhost:5173/?scene=thuydinh` | Chú Tễu, cô gái áo dài | cờ bay, sóng hồ, cá nhảy, gió, hạc bay |
+
+Thêm hoặc sửa cảnh trong `SCENES` ở `web/src/config.ts`.
+
 ## Chạy trên máy (Windows)
 
 1. Cài **Node.js LTS** (bản 20 hoặc 22) từ https://nodejs.org, rồi mở lại terminal.
@@ -22,23 +31,33 @@ web/      web app: Vite + TypeScript + MediaPipe Tasks Vision + Planck.js (vật
 
 ## Cách điều khiển
 
-| Ngón tay | Dây nối tới |
-|---|---|
-| Ngón giữa | Đầu |
-| Ngón trỏ | Tay bên trái màn hình |
-| Ngón áp út | Tay bên phải màn hình |
-| Ngón cái | Gối trái |
-| Ngón út | Gối phải |
+| Ngón tay | Tay phải của bạn | Tay trái của bạn |
+|---|---|---|
+| Ngón giữa | Đầu | Đầu |
+| Ngón trỏ | Tay trái rối | Tay phải rối |
+| Ngón cái | Chân trái rối | Chân phải rối |
+| Ngón áp út | Tay phải rối | Tay trái rối |
+| Ngón út | Chân phải rối | Chân trái rối |
+
+Trái/phải của rối tính theo phía trên màn hình.
 
 - Di chuyển cả bàn tay: rối di chuyển theo.
 - Hai tay: tay trái điều khiển rối bên trái, tay phải điều khiển rối bên phải.
 - Phím tắt: `C` camera, `M` chuột, `R` reset, `D` xem collider.
-- Dây có chiều dài cố định (mặc định bằng nửa chiều cao màn hình), hơi đàn hồi. Đưa tay lên cao thì dây căng và nhấc rối lên, hạ tay xuống thì dây chùng và rối ngồi xuống.
+- Dây đầu dài cố định (3/10 chiều cao màn hình), dây tay và dây gối chùng thêm một đoạn, tất cả hơi đàn hồi. Đưa tay lên cao thì dây căng và nhấc rối lên, hạ tay xuống thì dây chùng và rối ngồi xuống.
+
+## Đánh nhau
+
+- Vũ khí (thương, kiếm) chạm vào người con rối kia đủ nhanh là một đòn: người bị đánh văng ra sau, dây chùng một nhịp rồi kéo lại, máu bắn ra và loang trên nền.
+- Hai vũ khí chạm nhau thì tóe tia lửa.
+- Chỉnh trong mục `combat` của `web/src/config.ts`: `minHitSpeed` (tốc độ tối thiểu để tính đòn), `knockback` (lực hất), `staggerTime` (thời gian dây chùng), `cooldown`, `shakePx` (độ rung màn hình). Thêm vũ khí mới bằng cách ghi tên mảnh vào `weapons`.
 
 ## Chỉnh cảm giác điều khiển
 
 Mọi thông số nằm trong `web/src/config.ts`, ví dụ:
-- `rope.lengthOfScreen`: độ dài dây so với chiều cao màn hình (0.5 = một nửa). Giảm xuống 0.4 nếu bạn hay để tay ở giữa khung camera.
+- `rope.lengths.middle`: độ dài dây đầu (ngón giữa) so với chiều cao màn hình.
+- `rope.slack`: độ chùng thêm của dây tay (ngón trỏ, áp út) và dây gối (ngón cái, út). Tăng lên thì tay chân rối lỏng hơn.
+- `swapHandedness`: đặt `true` nếu webcam của bạn nhận nhầm tay trái và tay phải.
 - `rope.omega`, `rope.limbOmega`: độ cứng của dây. Số lớn thì dây ít giãn hơn.
 - `rope.attachedDamping`: lực cản không khí khi rối treo, giúp rối bớt đung đưa.
 - `loseAfter`, `growTime`, `standTime`: thời gian chờ trước khi ngã, thời gian dây mọc, thời gian đứng dậy.
@@ -68,6 +87,9 @@ python assets/puppet/teu/gen_teu.py
 python assets/puppet/co_gai/gen_co_gai.py
 python assets/background/gen_background.py
 python assets/background/gen_props.py
+python assets/background_snow/gen_background_snow.py
+python assets/puppet/chien_binh_tuyet/gen_chien_binh_tuyet.py
+python assets/puppet/ve_binh_streltsy/gen_ve_binh_streltsy.py
 python assets/make_preview.py
 ```
 Sau đó chạy lại `npm run dev` để web nhận asset mới.

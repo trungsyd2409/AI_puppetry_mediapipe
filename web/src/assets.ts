@@ -38,19 +38,18 @@ export interface Rig {
 
 export interface PuppetAsset { id: string; rig: Rig; images: Map<string, HTMLImageElement> }
 
-export interface Pole { x: number; top: number; side: number }
-
 export interface Stage {
+  folder: string;
   size: [number, number];
   floorY: number;
   stageX: [number, number];
   puppetHeight: number;
-  poles: Pole[];
-  water: { surfaceY: number; frontY: number };
-  bg: HTMLImageElement;
-  fgWater: HTMLImageElement;
-  fgLotus: HTMLImageElement;
-  props: { fish: HTMLImageElement; crane: HTMLImageElement[]; leaf: HTMLImageElement; scale: number };
+  /** Everything else from stage.json (poles, water, fire, ...) for the scene module. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  meta: Record<string, any>;
+  layers: Record<string, HTMLImageElement>;
+  props: Record<string, HTMLImageElement[]>;
+  propScale: number;
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -68,9 +67,11 @@ async function json<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function loadPuppets(): Promise<PuppetAsset[]> {
-  const ids = await json<string[]>("assets/puppets.json");
-  return Promise.all(ids.map(async (id) => {
+/** Load the given puppets (all listed in puppets.json when `ids` is omitted). */
+export async function loadPuppets(ids?: string[]): Promise<PuppetAsset[]> {
+  const all = await json<string[]>("assets/puppets.json");
+  const want = ids ? all.filter((id) => ids.includes(id)) : all;
+  return Promise.all(want.map(async (id) => {
     const rig = await json<Rig>(`assets/puppet/${id}/rig.json`);
     const images = new Map<string, HTMLImageElement>();
     await Promise.all(rig.parts.map(async (p) => {
@@ -80,23 +81,20 @@ export async function loadPuppets(): Promise<PuppetAsset[]> {
   }));
 }
 
-interface StageJson {
-  size: [number, number]; floorY: number; stageX: [number, number]; puppetHeight: number;
-  poles: Pole[]; water: { surfaceY: number; frontY: number };
-  layers: { bg: string; fgWater: string; fgLotus: string };
-  props: { fish: string; crane: string[]; leaf: string; scale: number };
-}
-
-export async function loadStage(): Promise<Stage> {
-  const s = await json<StageJson>("assets/background/stage.json");
-  const img = (f: string) => loadImage(`${BASE}assets/background/${f}`);
-  const [bg, fgWater, fgLotus, fish, leaf, ...crane] = await Promise.all([
-    img(s.layers.bg), img(s.layers.fgWater), img(s.layers.fgLotus),
-    img(s.props.fish), img(s.props.leaf), ...s.props.crane.map(img),
-  ]);
+/** Load assets/<folder>/stage.json and every image listed in its `layers` and `props`. */
+export async function loadStage(folder: string): Promise<Stage> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const s = await json<Record<string, any>>(`assets/${folder}/stage.json`);
+  const img = (f: string) => loadImage(`${BASE}assets/${folder}/${f}`);
+  const layers: Record<string, HTMLImageElement> = {};
+  const props: Record<string, HTMLImageElement[]> = {};
+  await Promise.all(Object.entries(s.layers ?? {}).map(async ([k, f]) => { layers[k] = await img(f as string); }));
+  await Promise.all(Object.entries(s.props ?? {}).map(async ([k, v]) => {
+    if (typeof v === "string") props[k] = [await img(v)];
+    else if (Array.isArray(v)) props[k] = await Promise.all(v.map((f: string) => img(f)));
+  }));
   return {
-    size: s.size, floorY: s.floorY, stageX: s.stageX, puppetHeight: s.puppetHeight,
-    poles: s.poles, water: s.water, bg, fgWater, fgLotus,
-    props: { fish, leaf, crane, scale: s.props.scale },
+    folder, size: s.size, floorY: s.floorY, stageX: s.stageX, puppetHeight: s.puppetHeight,
+    meta: s, layers, props, propScale: typeof s.props?.scale === "number" ? s.props.scale : 2,
   };
 }

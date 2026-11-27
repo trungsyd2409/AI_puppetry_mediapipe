@@ -1,14 +1,21 @@
 import "./style.css";
-import { CFG, type Pt } from "./config";
+import { CFG, DEFAULT_SCENE, SCENES, type Pt } from "./config";
 import { loadPuppets, loadStage, type PuppetAsset, type Stage } from "./assets";
 import { CameraHands, type HandObs, type HandSource, MouseHands } from "./hands";
 import { createWorld } from "./physics";
 import { type Control, Puppet } from "./puppet";
 import { drawCamera } from "./render";
-import { Ambience } from "./ambience";
+import type { SceneFx } from "./cloth";
+import { ThuyDinhFx } from "./fx_thuydinh";
+import { SnowFx } from "./fx_snow";
+import { HitFx } from "./fx_blood";
+import { Combat } from "./combat";
 import type { World } from "planck";
 
-const LABELS: Record<string, string> = { teu: "Chú Tễu", co_gai: "Cô gái áo dài" };
+const LABELS: Record<string, string> = { teu: "Chú Tễu", co_gai: "Cô gái áo dài", chien_binh_tuyet: "Chiến binh tuyết", ve_binh_streltsy: "Vệ binh Streltsy" };
+
+const sceneId = new URLSearchParams(location.search).get("scene") ?? DEFAULT_SCENE;
+const SCENE = SCENES[sceneId] ?? SCENES[DEFAULT_SCENE];
 
 const canvas = document.getElementById("stage") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
@@ -17,13 +24,15 @@ const overlay = document.getElementById("overlay")!;
 const statusEl = document.getElementById("status")!;
 
 let stage: Stage;
-let amb: Ambience;
+let amb: SceneFx;
 let assets: PuppetAsset[] = [];
 let world: World;
 let puppets: Puppet[] = [];
 let source: HandSource | null = null;
 let lastHands: HandObs[] = [];
 let showDebug = false;
+let hitFx: HitFx;
+let combat: Combat;
 
 // ------------------------------------------------------------------ mapping
 // Screen = square canvas. Top `split` px: mirrored webcam (cover-fit).
@@ -45,7 +54,8 @@ const normToScreen = (p: Pt): Pt => { const r = camRect(); return { x: r.ox + p.
 const screenToNorm = (p: Pt): Pt => { const r = camRect(); return { x: (p.x - r.ox) / r.dw, y: (p.y - r.oy) / r.dh }; };
 const screenToStage = (p: Pt): Pt => ({ x: p.x / S, y: (p.y - stageOffsetY) / S });
 const camToStage = (p: Pt): Pt => screenToStage(normToScreen(p));
-const stageTransform = () => ctx.setTransform(S, 0, 0, S, 0, stageOffsetY);
+let shakeX = 0, shakeY = 0;
+const stageTransform = () => ctx.setTransform(S, 0, 0, S, shakeX, stageOffsetY + shakeY);
 
 function toControl(h: HandObs): Control {
   const palmIdx = [0, 5, 9, 13, 17];
@@ -53,16 +63,15 @@ function toControl(h: HandObs): Control {
   return {
     palm: camToStage(palmN),
     tips: [4, 8, 12, 16, 20].map((i) => camToStage(h.lm[i])),
-    indexRight: h.lm[5].x > h.lm[17].x,   // knuckles: index MCP vs pinky MCP (mirrored view)
+    // right hand -> index side wired to the screen-left limbs; fall back to the knuckles if unknown
+    indexRight: h.right !== undefined ? !h.right : h.lm[5].x > h.lm[17].x,
   };
 }
 
 // ------------------------------------------------------------------ puppets
 function spawn() {
   puppets.forEach((p) => p.destroy());
-  const order = Object.keys(LABELS);
-  const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : 99);
-  const ids = assets.map((a) => a.id).sort((a, b) => rank(a) - rank(b));
+  const ids = SCENE.puppets.filter((id) => assets.some((a) => a.id === id));
   const xs = ids.length === 1 ? [800] : ids.map((_, i) => 670 + (260 * i) / Math.max(1, ids.length - 1));
   puppets = ids.map((id, i) => new Puppet(world, assets.find((a) => a.id === id)!, stage, xs[i], LABELS[id] ?? id));
 }
@@ -128,12 +137,18 @@ function frame(now: number) {
 
   for (const p of puppets) p.update(dt, now);
   amb.update(dt);
+  hitFx.update(dt);
+  combat.update(dt);
+  const sh = combat.shake * combat.shake * CFG.combat.shakePx;
+  shakeX = (Math.random() - 0.5) * 2 * sh;
+  shakeY = (Math.random() - 0.5) * 2 * sh;
   acc += dt;
   let n = 0;
   while (acc >= CFG.fixedDt && n < CFG.maxSubSteps) {
     const wind = amb.windAccel();
     for (const p of puppets) { p.applyForces(); p.applyWind(wind); }
     world.step(CFG.fixedDt, 8, 3);
+    combat.resolve(now);
     acc -= CFG.fixedDt;
     n++;
   }
@@ -157,21 +172,16 @@ function render(now: number) {
   ctx.save();
   ctx.beginPath(); ctx.rect(0, V.split, W, W - V.split); ctx.clip();
   stageTransform();
-  ctx.drawImage(stage.bg, 0, 0, stage.size[0], stage.size[1]);
-  amb.drawWaterBack(ctx);
-  amb.drawFlags(ctx);
-  amb.drawBirds(ctx);
+  amb.drawBackground(ctx);
+  hitFx.drawBack(ctx);
   for (const p of puppets) p.draw(ctx);
-  amb.drawFish(ctx);
-  ctx.drawImage(stage.fgWater, 0, 0, stage.size[0], stage.size[1]);
-  amb.drawWaterFront(ctx);
-  ctx.drawImage(stage.fgLotus, 0, 0, stage.size[0], stage.size[1]);
-  amb.drawWind(ctx);
+  hitFx.drawFront(ctx);
+  amb.drawForeground(ctx);
   ctx.restore();
 
   // divider
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.fillStyle = "#e2b44a";
+  ctx.fillStyle = SCENE.accent;
   ctx.fillRect(0, V.split - 2, W, 4);
 
   // strings cross both halves
@@ -185,16 +195,20 @@ function render(now: number) {
 // ------------------------------------------------------------------ boot
 async function boot() {
   statusEl.textContent = "Đang tải rối và sân khấu...";
-  [stage, assets] = await Promise.all([loadStage(), loadPuppets()]);
+  [stage, assets] = await Promise.all([loadStage(SCENE.background), loadPuppets(SCENE.puppets)]);
   canvas.width = W;
   canvas.height = W;
   world = createWorld(stage);
-  amb = new Ambience(stage);
+  hitFx = new HitFx(stage.floorY);
+  combat = new Combat(world, hitFx);
+  amb = SCENE.fx === "snow" ? new SnowFx(stage) : new ThuyDinhFx(stage);
   spawn();
   statusEl.textContent = "Chọn cách điều khiển.";
   requestAnimationFrame(frame);
 }
 
+document.title = SCENE.title;
+document.getElementById("title")!.textContent = SCENE.title;
 document.getElementById("btnCamera")!.onclick = () => useCamera();
 document.getElementById("btnMouse")!.onclick = () => useMouse();
 window.addEventListener("keydown", (e) => {
@@ -212,4 +226,4 @@ boot().catch((e) => {
 });
 
 // handy for automated tests
-(window as unknown as { __app: object }).__app = { get puppets() { return puppets; }, useMouse, get amb() { return amb; }, get world() { return world; } };
+(window as unknown as { __app: object }).__app = { get puppets() { return puppets; }, useMouse, get amb() { return amb; }, get world() { return world; }, get combat() { return combat; } };

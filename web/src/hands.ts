@@ -3,7 +3,8 @@
 import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
 import { CFG, type Pt } from "./config";
 
-export interface HandObs { lm: Pt[]; score: number }
+/** right: true when it is the user's right hand (undefined if unknown). */
+export interface HandObs { lm: Pt[]; score: number; right?: boolean }
 
 export interface HandSource {
   readonly kind: "camera" | "mouse";
@@ -75,6 +76,10 @@ export class CameraHands implements HandSource {
     return res.landmarks.map((lm, i) => ({
       lm: lm.map((p) => ({ x: 1 - p.x, y: p.y })),
       score: res.handedness[i]?.[0]?.score ?? 1,
+      // label assumes a mirrored image; raw webcam frames are not mirrored -> flip it once
+      right: res.handedness[i]?.[0]
+        ? (res.handedness[i][0].categoryName === "Left") !== CFG.swapHandedness
+        : undefined,
     }));
   }
 
@@ -131,7 +136,7 @@ export class MouseHands implements HandSource {
     this.lastEmit = now;
     this.lastSampleTime = now;
     if (!this.down || !this.pos) return [];
-    return [{ lm: fakeHand(this.pos, this.lifted), score: 1 }];
+    return [{ lm: fakeHand(this.pos, this.lifted), score: 1, right: true }];
   }
 
   dispose() { this.off.forEach((f) => f()); }
