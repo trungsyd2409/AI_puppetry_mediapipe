@@ -85,7 +85,7 @@ function spawn() {
   const xs = ids.length === 1 ? [800] : ids.map((_, i) => 670 + (260 * i) / Math.max(1, ids.length - 1));
   puppets = ids.map((id, i) => new Puppet(world, assets.find((a) => a.id === id)!, stage, xs[i], LABELS[id] ?? id));
   trackers.clear();
-  for (const p of puppets) p.onEvent = (e) => (e === "cut" ? sfx.stringCut() : sfx.stringAttach());
+  for (const p of puppets) p.onEvent = (e) => (e === "cut" ? sfx.stringCut() : e === "assembled" ? sfx.ultCast() : sfx.stringAttach());
 }
 
 // Which hand drives which puppet: sort hands left->right and give them to the puppets

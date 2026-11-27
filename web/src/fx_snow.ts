@@ -35,12 +35,16 @@ export class SnowFx implements SceneFx {
   private fire: { x: number; y: number };
   private glows: { x: number; y: number; r: number }[];
   private aurora: { y0: number; y1: number };
+  private moon: { x: number; y: number; r: number };
+  private flareStart = -100;
+  private nextFlare = rand(4, 8);
 
   constructor(private stage: Stage) {
     this.poles = stage.meta.poles;
     this.fire = stage.meta.fire;
     this.glows = stage.meta.tentGlows;
     this.aurora = stage.meta.aurora;
+    this.moon = stage.meta.moon ?? { x: 1260, y: 190, r: 78 };
     const [w, h] = stage.size;
     const make = (n: number, r: [number, number], vy: [number, number]): Flake[] =>
       Array.from({ length: n }, () => ({
@@ -65,6 +69,7 @@ export class SnowFx implements SceneFx {
     const [w, h] = this.stage.size;
     const g = this.gust;
     if (this.time >= this.nextGust) this.startGust();
+    if (this.time >= this.nextFlare) { this.flareStart = this.time; this.nextFlare = this.time + rand(7, 13); }
 
     // snow: gentle sway, carried sideways by the wind
     const wind = WIND_DIR * (12 + 520 * g);
@@ -121,6 +126,7 @@ export class SnowFx implements SceneFx {
   drawBackground(ctx: CanvasRenderingContext2D) {
     const [w, h] = this.stage.size;
     ctx.drawImage(this.stage.layers.sky, 0, 0, w, h);
+    this.drawMoon(ctx);
     this.drawAurora(ctx);
     ctx.drawImage(this.stage.layers.bg, 0, 0, w, h);
     this.drawTentGlow(ctx);
@@ -142,6 +148,39 @@ export class SnowFx implements SceneFx {
     ctx.beginPath();
     for (const f of fl) { ctx.moveTo(f.x + f.r, f.y); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); }
     ctx.fill();
+    ctx.restore();
+  }
+
+  /** Moon: drifts slowly up and down, breathes between dimmer and brighter, and now and then
+   *  swells to a bright glow for a few seconds. */
+  private drawMoon(ctx: CanvasRenderingContext2D) {
+    const { x, r } = this.moon;
+    const t = this.time;
+    const y = this.moon.y + 14 * Math.sin((t * 2 * Math.PI) / 26);
+    const fu = (t - this.flareStart) / 3.2;
+    const flare = fu > 0 && fu < 1 ? Math.sin(Math.PI * fu) ** 2 : 0;
+    const b = 0.82 + 0.1 * Math.sin((t * 2 * Math.PI) / 9) + 0.3 * flare;   // ~0.72 .. 1.22
+    ctx.save();
+    const gr = r * (2.4 + 0.9 * b);
+    const glow = ctx.createRadialGradient(x, y, r * 0.6, x, y, gr);
+    glow.addColorStop(0, `rgba(232,242,255,${(0.55 * b).toFixed(3)})`);
+    glow.addColorStop(1, "rgba(232,242,255,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(x, y, gr, 0, Math.PI * 2); ctx.fill();
+    const disk = ctx.createRadialGradient(x - r * 0.25, y - r * 0.25, r * 0.1, x, y, r);
+    disk.addColorStop(0, "#FFFFFF"); disk.addColorStop(1, "#CFDDEE");
+    ctx.fillStyle = disk;
+    ctx.strokeStyle = "#9FB3CC";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "rgba(195,210,228,0.6)";
+    for (const [dx, dy, cr] of [[-24, -18, 12], [24, 24, 17], [12, -30, 7], [-30, 22, 6]] as const) {
+      ctx.beginPath(); ctx.arc(x + dx, y + dy, cr, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip();
+    if (b < 1) ctx.fillStyle = `rgba(20,32,62,${((1 - b) * 0.9).toFixed(3)})`;
+    else { ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = `rgba(255,255,255,${((b - 1) * 0.45).toFixed(3)})`; }
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
     ctx.restore();
   }
 

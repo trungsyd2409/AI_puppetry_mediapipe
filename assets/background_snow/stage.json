@@ -58,5 +58,10 @@
     "y0": 110,
     "y1": 330
   },
-  "note": "web order: sky, aurora, bg, far snow, flags, fire, puppet, near snow, fg, wind"
+  "moon": {
+    "x": 1260,
+    "y": 190,
+    "r": 78
+  },
+  "note": "web order: sky, moon, aurora, bg, far snow, flags, fire, puppet, near snow, fg, wind"
 }

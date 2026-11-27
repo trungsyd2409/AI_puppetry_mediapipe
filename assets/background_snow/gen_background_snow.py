@@ -1,7 +1,7 @@
 """Snow-mountain camp at night, 1600 x 900, same flat ink style as the other assets.
 
 Outputs (drawn by the web app in this order):
-  stage_sky.png    night sky, stars, moon (the aurora is animated on top of it)
+  stage_sky.png    night sky and stars (the moon and the aurora are animated on top of it)
   stage_bg.png     mountains, pine forest, camp tents, campfire stones, snowy ground
   (puppet)
   stage_fg.png     snow drifts and big pines in front of the puppet
@@ -63,11 +63,7 @@ def sky():
         '<radialGradient id="g_moon" cx="0.4" cy="0.4"><stop offset="0" stop-color="#FFFFFF"/>'
         '<stop offset="1" stop-color="#CFDDEE"/></radialGradient></defs>'
         f'<rect width="{W}" height="{H}" fill="url(#g_sky)"/>' + stars + sparkle
-        + '<circle cx="1260" cy="190" r="220" fill="url(#g_moonglow)"/>'
-        + f'<circle cx="1260" cy="190" r="78" fill="url(#g_moon)" stroke="#9FB3CC" stroke-width="2"/>'
-        + '<circle cx="1236" cy="172" r="12" fill="#C3D2E4" opacity="0.6"/>'
-        + '<circle cx="1284" cy="214" r="17" fill="#C3D2E4" opacity="0.5"/>'
-        + '<circle cx="1272" cy="160" r="7" fill="#C3D2E4" opacity="0.6"/>'
+        # the moon itself is drawn (and animated) by the web app, see stage.json "moon"
     )
 
 
@@ -248,6 +244,7 @@ json.dump({
     "fire": {"x": FIRE[0], "y": FIRE[1] - 6},
     "tentGlows": glows,
     "aurora": {"y0": 110, "y1": 330},
-    "note": "web order: sky, aurora, bg, far snow, flags, fire, puppet, near snow, fg, wind",
+    "moon": {"x": 1260, "y": 190, "r": 78},
+    "note": "web order: sky, moon, aurora, bg, far snow, flags, fire, puppet, near snow, fg, wind",
 }, open(os.path.join(OUT, "stage.json"), "w"), indent=2)
 print("snow background done")

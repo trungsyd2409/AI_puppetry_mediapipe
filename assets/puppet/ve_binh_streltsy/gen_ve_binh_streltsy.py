@@ -299,7 +299,7 @@ COLLIDERS = {
     "torso": {"density": 1.0, "shapes": [capsule_shape((200, 236), (200, 318), 40)]},
     "head": {"density": 0.8, "shapes": [circle((200, 142), 38), capsule_shape((168, 84), (232, 84), 30)]},
     "braid": {"density": 0.25, "shapes": [capsule_shape((230, 175), (240, 365), 12)]},
-    "skirt": {"density": 0.3, "shapes": [capsule_shape((200, 390), (200, 540), 46)]},
+    "skirt": {"density": 0.3, "shapes": [capsule_shape((200, 390), (200, 520), 46), capsule_shape((156, 552), (244, 552), 22)]},
     "saber": {"density": 0.4, "shapes": [capsule_shape((GRIP[0], GRIP[1] - 30), (GRIP[0] - 14, GRIP[1] - 180), 7),
                                           capsule_shape((GRIP[0] - 14, GRIP[1] - 180), SABER_TIP, 6)]},
     "upper_arm_L": {"density": 1.0, "shapes": ARM_U}, "upper_arm_R": {"density": 1.0, "shapes": side(ARM_U)},

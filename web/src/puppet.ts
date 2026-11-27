@@ -71,8 +71,14 @@ export class Puppet {
   private graceUntil = 0;          // keep "hand present" while an ultimate gesture blurs the hand
   private noAttachUntil = 0;       // strings stay cut until then (ultimates)
   private weapons: { id: string; tip: Vec2; base: Vec2; body: Body }[] = [];
+  private order: PartRT[] = [];                       // parents before children
+  private joints = new Map<PartRT, RevoluteJoint>();
+  private restOffset = new Map<PartRT, Vec2>();       // pivot offset from the torso pivot (m)
+  private standY = 0;                                 // torso pivot y when standing (m)
+  private scatter: { phase: "flying" | "assembling"; t: number; fly: number;
+    from: { p: Vec2; a: number }[]; to: { p: Vec2; a: number }[] } | null = null;
   /** "cut" when the strings snap, "attach" when they reconnect. */
-  onEvent?: (e: "cut" | "attach") => void;
+  onEvent?: (e: "cut" | "attach" | "assembled") => void;
   private droppedTips: Pt[] = [];
 
   constructor(private world: World, asset: PuppetAsset, private stage: Stage, homeX: number, label: string) {
@@ -128,18 +134,16 @@ export class Puppet {
       this.parts.push(rt);
       this.byId.set(def.id, rt);
       if (def.parent) {
-        const parent = this.byId.get(def.parent)!;
-        const lim = def.limitDeg;
-        world.createJoint(new RevoluteJoint({
-          enableLimit: !!lim,
-          lowerAngle: lim ? (lim[0] * Math.PI) / 180 : 0,
-          upperAngle: lim ? (lim[1] * Math.PI) / 180 : 0,
-          enableMotor: true, motorSpeed: 0, maxMotorTorque: CFG.jointFriction * body.getMass(),
-        }, parent.body, body, body.getPosition()));
+        this.makeJoint(rt);
       } else {
         this.torso = rt;
       }
     }
+    this.order = [...this.parts];
+    const torsoPivot = this.torso.def.pivotWorld;
+    for (const p of this.order)
+      this.restOffset.set(p, Vec2((p.def.pivotWorld[0] - torsoPivot[0]) * s, (p.def.pivotWorld[1] - torsoPivot[1]) * s));
+    this.standY = m(toStage(...torsoPivot).y);
     this.parts.sort((a, b) => a.def.z - b.def.z);
     // weapon blade: farthest collider point from the grip is the tip
     for (const p of this.parts) {
@@ -215,6 +219,7 @@ export class Puppet {
   update(dt: number, now: number) {
     this.stateTime += dt;
     this.staggerT = Math.max(0, this.staggerT - dt);
+    if (this.scatter) this.updateScatter(dt);
     const present = now - this.lastSeen < CFG.loseAfter * 1000 || now < this.graceUntil;
     if (this.state !== "DETACHED" && !present) this.detach(now);
     else if (this.state === "DETACHED" && this.seenFrames >= CFG.attachFrames && this.control
@@ -294,6 +299,74 @@ export class Puppet {
     this.setState("REATTACHING");
     this.onEvent?.("attach");
   }
+
+  private makeJoint(rt: PartRT) {
+    const parent = this.byId.get(rt.def.parent!)!;
+    const lim = rt.def.limitDeg;
+    const j = this.world.createJoint(new RevoluteJoint({
+      enableLimit: !!lim,
+      lowerAngle: lim ? (lim[0] * Math.PI) / 180 : 0,
+      upperAngle: lim ? (lim[1] * Math.PI) / 180 : 0,
+      enableMotor: true, motorSpeed: 0, maxMotorTorque: CFG.jointFriction * rt.body.getMass(),
+    }, parent.body, rt.body, rt.body.getPosition()));
+    if (j) this.joints.set(rt, j as RevoluteJoint);
+  }
+
+  /** Break every joint and throw the parts across the screen for `seconds`, then fly them
+   *  back together into a standing puppet. Strings stay cut until it is whole again. */
+  shatter(now: number, seconds: number) {
+    const A = CFG.ult.giantSword;
+    if (this.scatter) for (const p of this.order) p.body.setDynamic();   // hit again while reassembling
+    this.forceDetach(now, seconds + A.assembleTime + 0.15);
+    for (const j of this.joints.values()) this.world.destroyJoint(j);
+    this.joints.clear();
+    for (const p of this.parts) {
+      const a = Math.random() * Math.PI * 2, sp = A.scatterSpeed[0] + Math.random() * (A.scatterSpeed[1] - A.scatterSpeed[0]);
+      p.body.setLinearVelocity(Vec2(Math.cos(a) * sp, Math.sin(a) * sp - 3));
+      p.body.setAngularVelocity((Math.random() - 0.5) * 30);
+    }
+    this.scatter = { phase: "flying", t: 0, fly: seconds, from: [], to: [] };
+  }
+
+  get scattered() { return this.scatter !== null; }
+
+  private updateScatter(dt: number) {
+    const sc = this.scatter!;
+    sc.t += dt;
+    if (sc.phase === "flying" && sc.t >= sc.fly) {
+      // fly back: torso upright at standing height, every part at its rest offset
+      sc.phase = "assembling";
+      sc.t = 0;
+      const W = this.stage.size[0];
+      const tx = Math.min(m(W - 260), Math.max(m(260), this.torso.body.getPosition().x));
+      sc.from = this.order.map((p) => ({ p: p.body.getPosition().clone(), a: p.body.getAngle() }));
+      sc.to = this.order.map((p) => {
+        const o = this.restOffset.get(p)!;
+        return { p: Vec2(tx + o.x, this.standY + o.y), a: 0 };
+      });
+      for (const p of this.order) { p.body.setKinematic(); p.body.setLinearVelocity(Vec2(0, 0)); p.body.setAngularVelocity(0); }
+    }
+    if (sc.phase === "assembling") {
+      const e = smooth(sc.t / CFG.ult.giantSword.assembleTime);
+      this.order.forEach((p, i) => {
+        const f = sc.from[i], t = sc.to[i];
+        // unwrap the angle so parts take the short way round
+        let a0 = f.a % (Math.PI * 2);
+        if (a0 > Math.PI) a0 -= Math.PI * 2;
+        if (a0 < -Math.PI) a0 += Math.PI * 2;
+        p.body.setTransform(Vec2(f.p.x + (t.p.x - f.p.x) * e, f.p.y + (t.p.y - f.p.y) * e), a0 + (t.a - a0) * e);
+      });
+      if (sc.t >= CFG.ult.giantSword.assembleTime) {
+        for (const p of this.order) { p.body.setDynamic(); p.body.setLinearVelocity(Vec2(0, 0)); p.body.setAngularVelocity(0); }
+        for (const p of this.order) if (p.def.parent) this.makeJoint(p);
+        this.scatter = null;
+        this.onEvent?.("assembled");
+      }
+    }
+  }
+
+  /** Torso centre in stage px. */
+  torsoPx(): Pt { const p = this.torso.body.getWorldCenter(); return { x: px(p.x), y: px(p.y) }; }
 
   /** Keep the hand counted as present until `until` (ms). */
   holdPresence(until: number) { this.graceUntil = Math.max(this.graceUntil, until); }

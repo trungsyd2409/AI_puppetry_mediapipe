@@ -1,8 +1,9 @@
 // Ultimates, drawn and simulated in stage pixels.
 //   giantSword (white warrior): a huge ice sword drops on the opponent's head (aimed where the
-//     head was when cast, so it can be dodged). A hit cuts the opponent's strings for 1 s.
-//   swordRain (red guard): small ice swords rain around the opponent for 4 s. The opponent's
-//     strings are cut for the whole time and every sword that lands on them throws them around.
+//     head was when cast, so it can be dodged). A hit breaks the opponent into pieces that fly
+//     around for 3 s, then reassemble; only then can the strings reconnect.
+//   swordRain (red guard): for 4 s small ice swords fly at the opponent from every side. The
+//     opponent's strings are cut the whole time and each hit throws them in a random direction.
 import { CFG, type Pt } from "./config";
 import type { Puppet } from "./puppet";
 import type { HitFx } from "./fx_blood";
@@ -87,11 +88,15 @@ export class Ultimates {
     for (const r of this.rains) {
       r.t += dt;
       r.acc += dt * R.perSecond;
-      const cx = r.target ? r.target.torsoX() : r.caster.torsoX() + 300;
+      const aim = r.target ? r.target.torsoPx() : { x: r.caster.torsoX() + 300, y: this.floorY - 250 };
       while (r.acc >= 1 && r.t < R.duration) {
         r.acc -= 1;
-        const vx = rand(-90, 90);
-        this.swords.push({ x: cx + rand(-R.spread, R.spread), y: this.topY - rand(40, 260), vx, vy: rand(1150, 1450),
+        // come from anywhere above or beside the target (never from under the ground)
+        const from = (rand(-195, 15) * Math.PI) / 180;
+        const sx = aim.x + Math.cos(from) * 1050, sy = aim.y + Math.sin(from) * 1050;
+        const tx = aim.x + rand(-R.aimSpread, R.aimSpread), ty = aim.y + rand(-R.aimSpread, R.aimSpread);
+        const d = Math.hypot(tx - sx, ty - sy), sp = rand(R.speed[0], R.speed[1]);
+        this.swords.push({ x: sx, y: sy, vx: ((tx - sx) / d) * sp, vy: ((ty - sy) / d) * sp,
           landed: 0, gone: false, id: this.nextId++ });
       }
       for (const s of this.swords) {
@@ -99,10 +104,8 @@ export class Ultimates {
         const body = r.target.hitTest(s.x, s.y) ?? r.target.hitTest(s.x - s.vx * 0.02, s.y - s.vy * 0.02);
         if (body) {
           s.gone = true;
-          const side = Math.random() < 0.5 ? -1 : 1;
-          const dir = { x: side * rand(0.4, 1), y: -rand(0.5, 1) };
-          const n = Math.hypot(dir.x, dir.y);
-          dir.x /= n; dir.y /= n;
+          const a = rand(0, Math.PI * 2);                 // up, down, left, right: anything
+          const dir = { x: Math.cos(a), y: Math.sin(a) };
           r.target.knockback(body, Vec2(m(s.x), m(s.y)), dir, rand(R.knockback.min, R.knockback.max));
           this.hitFx.blood(s.x, s.y, dir.x, dir.y, 0.2);
           this.sfx.hit(0.5);
@@ -115,7 +118,8 @@ export class Ultimates {
       if (s.gone) continue;
       if (!s.landed) {
         s.x += s.vx * dt; s.y += s.vy * dt;
-        if (s.y >= this.floorY + 14) { s.y = this.floorY + 14; s.landed = this.time; this.sfx.rainSword(); this.wfx.shatter(s.x, s.y, 4, 0.5); }
+        if (s.y >= this.floorY + 14 && s.vy > 0) { s.y = this.floorY + 14; s.landed = this.time; this.sfx.rainSword(); this.wfx.shatter(s.x, s.y, 4, 0.5); }
+        else if (s.x < -400 || s.x > 2000 || s.y < this.topY - 1200) s.gone = true;
       } else if (this.time - s.landed > 0.8) {
         s.gone = true;
       }
@@ -133,11 +137,7 @@ export class Ultimates {
         if (!body) continue;
         g.hit = true;
         const side = Math.sign(t.torsoX() - g.x) || 1;
-        const dir = { x: side * 0.45, y: 0.9 };
-        const n = Math.hypot(dir.x, dir.y);
-        dir.x /= n; dir.y /= n;
-        t.forceDetach(now, CFG.ult.giantSword.detach);
-        t.knockback(body, Vec2(m(g.x + dx), m(g.y + dy)), dir, CFG.ult.giantSword.knockback);
+        t.shatter(now, CFG.ult.giantSword.scatterTime);
         this.hitFx.blood(g.x, g.y + dy, side, -0.6, 1);
         this.hitFx.blood(g.x, g.y + dy, -side, -0.6, 0.8);
         this.wfx.shatter(g.x, g.y + dy, 30, 1);

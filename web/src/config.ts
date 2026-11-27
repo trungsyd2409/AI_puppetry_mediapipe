@@ -83,8 +83,10 @@ export const CFG = {
     lockAfter: 0.3,            // s the strings stay locked after the L pose is seen
     cooldown: 10,              // s
     kinds: { chien_binh_tuyet: "giantSword", ve_binh_streltsy: "swordRain" } as Record<string, "giantSword" | "swordRain">,
-    giantSword: { fallTime: 0.7, detach: 1, hitWidth: 34, knockback: 7 },
-    swordRain: { duration: 4, perSecond: 14, spread: 300, knockback: { min: 6, max: 11 } },
+    // white: the hit target breaks apart for scatterTime s, then flies back together
+    giantSword: { fallTime: 0.7, hitWidth: 34, scatterTime: 3, assembleTime: 0.8, scatterSpeed: [8, 16] },
+    // red: swords fly in from every side (not from below) at the target; random knockback direction
+    swordRain: { duration: 4, perSecond: 14, aimSpread: 140, speed: [1100, 1500], knockback: { min: 6, max: 11 } },
     testKeys: ["u", "i"],      // keyboard: cast for puppet 1 / puppet 2 (mouse testing)
   },
 

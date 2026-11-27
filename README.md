@@ -58,8 +58,8 @@ Cử chỉ: bàn tay hình chữ L (ngón trỏ duỗi, ngón cái duỗi ngang,
 
 | Nhân vật | Đại chiêu |
 |---|---|
-| Chiến binh tuyết | Kiếm băng khổng lồ rơi xuống đầu đối thủ (né được). Trúng thì đối thủ mất dây 1 giây. |
-| Vệ binh Streltsy | Mưa kiếm băng quanh đối thủ trong 4 giây. Đối thủ mất dây suốt 4 giây và bị hất văng khắp màn hình. |
+| Chiến binh tuyết | Kiếm băng khổng lồ rơi xuống đầu đối thủ (né được). Trúng thì đối thủ vỡ thành từng mảnh văng tứ tung 3 giây, sau đó các mảnh bay về ghép lại thành người và dây nối lại với tay. |
+| Vệ binh Streltsy | Kiếm băng bay tới đối thủ từ mọi hướng (trên, hai bên, chéo) trong 4 giây. Đối thủ mất dây suốt 4 giây, mỗi thanh trúng hất văng theo hướng ngẫu nhiên. |
 
 - Hồi chiêu 10 giây, vòng tròn trên đầu mỗi nhân vật cho biết khi nào dùng lại được.
 - Test bằng phím: `U` (nhân vật 1), `I` (nhân vật 2).
