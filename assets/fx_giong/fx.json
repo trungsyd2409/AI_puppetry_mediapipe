@@ -1,0 +1,218 @@
+{
+  "shell": {
+    "png": "shell.png",
+    "size": [
+      64,
+      64
+    ],
+    "anchor": [
+      32.0,
+      32.0
+    ],
+    "pngScale": 2
+  },
+  "trail_0": {
+    "png": "trail_0.png",
+    "size": [
+      160,
+      80
+    ],
+    "anchor": [
+      5,
+      40
+    ],
+    "pngScale": 2
+  },
+  "trail_1": {
+    "png": "trail_1.png",
+    "size": [
+      160,
+      80
+    ],
+    "anchor": [
+      5,
+      40
+    ],
+    "pngScale": 2
+  },
+  "trail_2": {
+    "png": "trail_2.png",
+    "size": [
+      160,
+      80
+    ],
+    "anchor": [
+      5,
+      40
+    ],
+    "pngScale": 2
+  },
+  "explode_0": {
+    "png": "explode_0.png",
+    "size": [
+      280,
+      280
+    ],
+    "anchor": [
+      140.0,
+      140.0
+    ],
+    "pngScale": 2
+  },
+  "explode_1": {
+    "png": "explode_1.png",
+    "size": [
+      280,
+      280
+    ],
+    "anchor": [
+      140.0,
+      140.0
+    ],
+    "pngScale": 2
+  },
+  "explode_2": {
+    "png": "explode_2.png",
+    "size": [
+      280,
+      280
+    ],
+    "anchor": [
+      140.0,
+      140.0
+    ],
+    "pngScale": 2
+  },
+  "explode_3": {
+    "png": "explode_3.png",
+    "size": [
+      280,
+      280
+    ],
+    "anchor": [
+      140.0,
+      140.0
+    ],
+    "pngScale": 2
+  },
+  "explode_4": {
+    "png": "explode_4.png",
+    "size": [
+      280,
+      280
+    ],
+    "anchor": [
+      140.0,
+      140.0
+    ],
+    "pngScale": 2
+  },
+  "spark": {
+    "png": "spark.png",
+    "size": [
+      130,
+      130
+    ],
+    "anchor": [
+      65.0,
+      65.0
+    ],
+    "pngScale": 2
+  },
+  "dust_0": {
+    "png": "dust_0.png",
+    "size": [
+      190,
+      80
+    ],
+    "anchor": [
+      95,
+      55
+    ],
+    "pngScale": 2
+  },
+  "dust_1": {
+    "png": "dust_1.png",
+    "size": [
+      190,
+      80
+    ],
+    "anchor": [
+      95,
+      55
+    ],
+    "pngScale": 2
+  },
+  "dust_2": {
+    "png": "dust_2.png",
+    "size": [
+      190,
+      80
+    ],
+    "anchor": [
+      95,
+      55
+    ],
+    "pngScale": 2
+  },
+  "catapult_base": {
+    "png": "catapult_base.png",
+    "size": [
+      300,
+      200
+    ],
+    "anchor": [
+      150,
+      100
+    ],
+    "pngScale": 2
+  },
+  "catapult_arm": {
+    "png": "catapult_arm.png",
+    "size": [
+      300,
+      80
+    ],
+    "anchor": [
+      205,
+      40
+    ],
+    "pngScale": 2
+  },
+  "life": {
+    "png": "life.png",
+    "size": [
+      40,
+      84
+    ],
+    "anchor": [
+      20.0,
+      42.0
+    ],
+    "pngScale": 2
+  },
+  "life_lost": {
+    "png": "life_lost.png",
+    "size": [
+      40,
+      84
+    ],
+    "anchor": [
+      20.0,
+      42.0
+    ],
+    "pngScale": 2
+  },
+  "score_plaque": {
+    "png": "score_plaque.png",
+    "size": [
+      360,
+      80
+    ],
+    "anchor": [
+      180.0,
+      40.0
+    ],
+    "pngScale": 2
+  }
+}

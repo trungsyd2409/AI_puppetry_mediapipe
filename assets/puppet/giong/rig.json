@@ -1,0 +1,798 @@
+{
+  "name": "giong",
+  "units": "design units (1 unit = 2 px in PNG); y down; facing right; colliders relative to part pivot",
+  "canvas": [
+    720,
+    660
+  ],
+  "pngScale": 2,
+  "feetY": 643,
+  "parts": [
+    {
+      "id": "tail",
+      "parent": "body",
+      "z": 1,
+      "svg": "parts/tail.svg",
+      "png": "parts/tail.png",
+      "origin": [
+        104,
+        360
+      ],
+      "size": [
+        114,
+        222
+      ],
+      "pivot": [
+        92,
+        18
+      ],
+      "pivotWorld": [
+        196,
+        378
+      ],
+      "limitDeg": [
+        -35,
+        45
+      ],
+      "density": 1.0,
+      "colliders": []
+    },
+    {
+      "id": "hind_far_upper",
+      "parent": "body",
+      "z": 2,
+      "svg": "parts/hind_far_upper.svg",
+      "png": "parts/hind_far_upper.png",
+      "origin": [
+        226,
+        386
+      ],
+      "size": [
+        93,
+        167
+      ],
+      "pivot": [
+        46,
+        46
+      ],
+      "pivotWorld": [
+        272,
+        432
+      ],
+      "limitDeg": [
+        -45,
+        55
+      ],
+      "density": 1.0,
+      "colliders": []
+    },
+    {
+      "id": "hind_far_lower",
+      "parent": "hind_far_upper",
+      "z": 2,
+      "svg": "parts/hind_far_lower.svg",
+      "png": "parts/hind_far_lower.png",
+      "origin": [
+        229,
+        512
+      ],
+      "size": [
+        62,
+        137
+      ],
+      "pivot": [
+        21,
+        20
+      ],
+      "pivotWorld": [
+        250,
+        532
+      ],
+      "limitDeg": [
+        -10,
+        100
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            12,
+            100
+          ],
+          "r": 12
+        }
+      ]
+    },
+    {
+      "id": "front_far_upper",
+      "parent": "body",
+      "z": 2,
+      "svg": "parts/front_far_upper.svg",
+      "png": "parts/front_far_upper.png",
+      "origin": [
+        377,
+        395
+      ],
+      "size": [
+        78,
+        158
+      ],
+      "pivot": [
+        39,
+        39
+      ],
+      "pivotWorld": [
+        416,
+        434
+      ],
+      "limitDeg": [
+        -70,
+        60
+      ],
+      "density": 1.0,
+      "colliders": []
+    },
+    {
+      "id": "front_far_lower",
+      "parent": "front_far_upper",
+      "z": 2,
+      "svg": "parts/front_far_lower.svg",
+      "png": "parts/front_far_lower.png",
+      "origin": [
+        384,
+        512
+      ],
+      "size": [
+        57,
+        136
+      ],
+      "pivot": [
+        36,
+        20
+      ],
+      "pivotWorld": [
+        420,
+        532
+      ],
+      "limitDeg": [
+        -120,
+        10
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            -8,
+            100
+          ],
+          "r": 12
+        }
+      ]
+    },
+    {
+      "id": "body",
+      "parent": null,
+      "z": 4,
+      "svg": "parts/body.svg",
+      "png": "parts/body.png",
+      "origin": [
+        181,
+        338
+      ],
+      "size": [
+        306,
+        176
+      ],
+      "pivot": [
+        149,
+        72
+      ],
+      "pivotWorld": [
+        330,
+        410
+      ],
+      "limitDeg": null,
+      "density": 2.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            -108,
+            0
+          ],
+          "b": [
+            120,
+            6
+          ],
+          "r": 58
+        }
+      ]
+    },
+    {
+      "id": "hind_near_upper",
+      "parent": "body",
+      "z": 5,
+      "svg": "parts/hind_near_upper.svg",
+      "png": "parts/hind_near_upper.png",
+      "origin": [
+        195,
+        386
+      ],
+      "size": [
+        94,
+        168
+      ],
+      "pivot": [
+        47,
+        46
+      ],
+      "pivotWorld": [
+        242,
+        432
+      ],
+      "limitDeg": [
+        -45,
+        55
+      ],
+      "density": 1.0,
+      "colliders": []
+    },
+    {
+      "id": "hind_near_lower",
+      "parent": "hind_near_upper",
+      "z": 5,
+      "svg": "parts/hind_near_lower.svg",
+      "png": "parts/hind_near_lower.png",
+      "origin": [
+        194,
+        510
+      ],
+      "size": [
+        65,
+        138
+      ],
+      "pivot": [
+        22,
+        22
+      ],
+      "pivotWorld": [
+        216,
+        532
+      ],
+      "limitDeg": [
+        -10,
+        100
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            14,
+            100
+          ],
+          "r": 12
+        }
+      ]
+    },
+    {
+      "id": "front_near_upper",
+      "parent": "body",
+      "z": 5,
+      "svg": "parts/front_near_upper.svg",
+      "png": "parts/front_near_upper.png",
+      "origin": [
+        408,
+        399
+      ],
+      "size": [
+        77,
+        154
+      ],
+      "pivot": [
+        38,
+        37
+      ],
+      "pivotWorld": [
+        446,
+        436
+      ],
+      "limitDeg": [
+        -70,
+        60
+      ],
+      "density": 1.0,
+      "colliders": []
+    },
+    {
+      "id": "front_near_lower",
+      "parent": "front_near_upper",
+      "z": 5,
+      "svg": "parts/front_near_lower.svg",
+      "png": "parts/front_near_lower.png",
+      "origin": [
+        425,
+        511
+      ],
+      "size": [
+        55,
+        138
+      ],
+      "pivot": [
+        31,
+        21
+      ],
+      "pivotWorld": [
+        456,
+        532
+      ],
+      "limitDeg": [
+        -120,
+        10
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            -4,
+            100
+          ],
+          "r": 12
+        }
+      ]
+    },
+    {
+      "id": "neck",
+      "parent": "body",
+      "z": 6,
+      "svg": "parts/neck.svg",
+      "png": "parts/neck.png",
+      "origin": [
+        353,
+        188
+      ],
+      "size": [
+        249,
+        240
+      ],
+      "pivot": [
+        75,
+        192
+      ],
+      "pivotWorld": [
+        428,
+        380
+      ],
+      "limitDeg": [
+        -30,
+        25
+      ],
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            12,
+            -10
+          ],
+          "b": [
+            72,
+            -110
+          ],
+          "r": 26
+        },
+        {
+          "type": "capsule",
+          "a": [
+            82,
+            -110
+          ],
+          "b": [
+            147,
+            -50
+          ],
+          "r": 20
+        }
+      ]
+    },
+    {
+      "id": "boy_arm_far_upper",
+      "parent": "boy_torso",
+      "z": 7,
+      "svg": "parts/boy_arm_far_upper.svg",
+      "png": "parts/boy_arm_far_upper.png",
+      "origin": [
+        272,
+        250
+      ],
+      "size": [
+        60,
+        90
+      ],
+      "pivot": [
+        37.8,
+        22.0
+      ],
+      "pivotWorld": [
+        309.8,
+        272.0
+      ],
+      "limitDeg": [
+        -120,
+        120
+      ],
+      "density": 1.0,
+      "colliders": []
+    },
+    {
+      "id": "boy_arm_far_fore",
+      "parent": "boy_arm_far_upper",
+      "z": 10,
+      "svg": "parts/boy_arm_far_fore.svg",
+      "png": "parts/boy_arm_far_fore.png",
+      "origin": [
+        271,
+        287
+      ],
+      "size": [
+        90,
+        55
+      ],
+      "pivot": [
+        20.6,
+        34.4
+      ],
+      "pivotWorld": [
+        291.6,
+        321.4
+      ],
+      "limitDeg": [
+        -150,
+        20
+      ],
+      "density": 1.0,
+      "colliders": []
+    },
+    {
+      "id": "boy_torso",
+      "parent": "body",
+      "z": 8,
+      "svg": "parts/boy_torso.svg",
+      "png": "parts/boy_torso.png",
+      "origin": [
+        228,
+        243
+      ],
+      "size": [
+        165,
+        185
+      ],
+      "pivot": [
+        100.0,
+        107.0
+      ],
+      "pivotWorld": [
+        328.0,
+        350.0
+      ],
+      "limitDeg": [
+        -25,
+        25
+      ],
+      "density": 0.8,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            7.8,
+            -5.2
+          ],
+          "b": [
+            10.4,
+            -75.4
+          ],
+          "r": 38
+        }
+      ]
+    },
+    {
+      "id": "boy_head",
+      "parent": "boy_torso",
+      "z": 9,
+      "svg": "parts/boy_head.svg",
+      "png": "parts/boy_head.png",
+      "origin": [
+        269,
+        101
+      ],
+      "size": [
+        143,
+        166
+      ],
+      "pivot": [
+        66.8,
+        152.8
+      ],
+      "pivotWorld": [
+        335.8,
+        253.8
+      ],
+      "limitDeg": [
+        -30,
+        30
+      ],
+      "density": 0.6,
+      "colliders": [
+        {
+          "type": "circle",
+          "c": [
+            10.4,
+            -59.8
+          ],
+          "r": 56
+        }
+      ]
+    },
+    {
+      "id": "boy_thigh",
+      "parent": "boy_torso",
+      "z": 10,
+      "svg": "parts/boy_thigh.svg",
+      "png": "parts/boy_thigh.png",
+      "origin": [
+        297,
+        319
+      ],
+      "size": [
+        120,
+        85
+      ],
+      "pivot": [
+        31.0,
+        31.0
+      ],
+      "pivotWorld": [
+        328.0,
+        350.0
+      ],
+      "limitDeg": [
+        -30,
+        30
+      ],
+      "density": 1.0,
+      "colliders": []
+    },
+    {
+      "id": "boy_shin",
+      "parent": "boy_thigh",
+      "z": 10,
+      "svg": "parts/boy_shin.svg",
+      "png": "parts/boy_shin.png",
+      "origin": [
+        358,
+        356
+      ],
+      "size": [
+        66,
+        124
+      ],
+      "pivot": [
+        35.0,
+        22.6
+      ],
+      "pivotWorld": [
+        393.0,
+        378.6
+      ],
+      "limitDeg": [
+        -20,
+        60
+      ],
+      "density": 1.0,
+      "colliders": []
+    },
+    {
+      "id": "bamboo",
+      "parent": "boy_arm_near_fore",
+      "z": 11,
+      "svg": "parts/bamboo.svg",
+      "png": "parts/bamboo.png",
+      "origin": [
+        208,
+        3
+      ],
+      "size": [
+        461,
+        420
+      ],
+      "pivot": [
+        192.8,
+        250.8
+      ],
+      "pivotWorld": [
+        400.8,
+        253.8
+      ],
+      "limitDeg": null,
+      "density": 0.4,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            -167.11,
+            143.38
+          ],
+          "b": [
+            197.5,
+            -169.44
+          ],
+          "r": 9
+        }
+      ]
+    },
+    {
+      "id": "boy_arm_near_upper",
+      "parent": "boy_torso",
+      "z": 12,
+      "svg": "parts/boy_arm_near_upper.svg",
+      "png": "parts/boy_arm_near_upper.png",
+      "origin": [
+        336,
+        246
+      ],
+      "size": [
+        59,
+        92
+      ],
+      "pivot": [
+        23.2,
+        23.4
+      ],
+      "pivotWorld": [
+        359.2,
+        269.4
+      ],
+      "limitDeg": [
+        -120,
+        120
+      ],
+      "density": 1.0,
+      "colliders": []
+    },
+    {
+      "id": "boy_arm_near_fore",
+      "parent": "boy_arm_near_upper",
+      "z": 12,
+      "svg": "parts/boy_arm_near_fore.svg",
+      "png": "parts/boy_arm_near_fore.png",
+      "origin": [
+        354,
+        229
+      ],
+      "size": [
+        71,
+        110
+      ],
+      "pivot": [
+        20.8,
+        89.8
+      ],
+      "pivotWorld": [
+        374.8,
+        318.8
+      ],
+      "limitDeg": [
+        -150,
+        20
+      ],
+      "density": 1.0,
+      "colliders": []
+    }
+  ],
+  "strings": [
+    {
+      "id": "bamboo_top",
+      "part": "bamboo",
+      "anchor": [
+        386.5,
+        84.62
+      ],
+      "anchorWorld": [
+        594.5,
+        87.62
+      ],
+      "hand": "left",
+      "finger": "middle",
+      "mpLandmark": 12
+    },
+    {
+      "id": "bamboo_bottom",
+      "part": "bamboo",
+      "anchor": [
+        29.49,
+        390.92
+      ],
+      "anchorWorld": [
+        237.49,
+        393.92
+      ],
+      "hand": "left",
+      "finger": "index",
+      "mpLandmark": 8
+    },
+    {
+      "id": "front_near",
+      "part": "front_near_lower",
+      "anchor": [
+        31,
+        43
+      ],
+      "anchorWorld": [
+        456,
+        554
+      ],
+      "hand": "right",
+      "finger": "index",
+      "mpLandmark": 8
+    },
+    {
+      "id": "front_far",
+      "part": "front_far_lower",
+      "anchor": [
+        36,
+        42
+      ],
+      "anchorWorld": [
+        420,
+        554
+      ],
+      "hand": "right",
+      "finger": "middle",
+      "mpLandmark": 12
+    }
+  ],
+  "groundY": 640,
+  "gripNear": [
+    400.8,
+    253.8
+  ],
+  "gripFar": [
+    335.8,
+    311.0
+  ],
+  "bambooEnds": [
+    [
+      226.09132498921016,
+      403.69210185584814
+    ],
+    [
+      605.8927924039707,
+      77.83970651704789
+    ]
+  ],
+  "runLegs": [
+    "front_near",
+    "front_far",
+    "hind_near",
+    "hind_far"
+  ]
+}
