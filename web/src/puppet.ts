@@ -20,7 +20,9 @@ export type PuppetState = "DETACHED" | "REATTACHING" | "ATTACHED";
 /** Hand in stage pixels. tips: thumb, index, middle, ring, pinky.
  *  indexRight: on screen, the index-finger side of the palm is to the right of the pinky side
  *  (true for a left hand with the palm to the camera, false for a right hand). */
-export interface Control { palm: Pt; tips: Pt[]; indexRight: boolean }
+export interface Control { palm: Pt; tips: Pt[]; indexRight: boolean; lm?: Pt[] }
+
+export interface WeaponSeg { key: string; tip: Pt; base: Pt }
 
 const TIP_SLOT: Record<number, number> = { 4: 0, 8: 1, 12: 2, 16: 3, 20: 4 };
 const FINGER_COLORS = ["#ff9f43", "#feca57", "#48dbfb", "#1dd1a1", "#ff6b9d"];
@@ -66,6 +68,11 @@ export class Puppet {
   private lastSample = 0;
   private detachedAt = -Infinity;
   private staggerT = 0;
+  private graceUntil = 0;          // keep "hand present" while an ultimate gesture blurs the hand
+  private noAttachUntil = 0;       // strings stay cut until then (ultimates)
+  private weapons: { id: string; tip: Vec2; base: Vec2; body: Body }[] = [];
+  /** "cut" when the strings snap, "attach" when they reconnect. */
+  onEvent?: (e: "cut" | "attach") => void;
   private droppedTips: Pt[] = [];
 
   constructor(private world: World, asset: PuppetAsset, private stage: Stage, homeX: number, label: string) {
@@ -134,6 +141,18 @@ export class Puppet {
       }
     }
     this.parts.sort((a, b) => a.def.z - b.def.z);
+    // weapon blade: farthest collider point from the grip is the tip
+    for (const p of this.parts) {
+      if (!CFG.combat.weapons.includes(p.def.id)) continue;
+      let tip = { x: 0, y: 0 }, best = -1;
+      for (const sh of p.def.colliders)
+        for (const q of sh.type === "circle" ? [sh.c] : [sh.a, sh.b]) {
+          const dd = Math.hypot(q[0], q[1]);
+          if (dd > best) { best = dd; tip = { x: q[0], y: q[1] }; }
+        }
+      const f = CFG.weaponFx.bladeFrom[p.def.id] ?? 0.3;
+      this.weapons.push({ id: p.def.id, body: p.body, tip: Vec2(tip.x * s, tip.y * s), base: Vec2(tip.x * s * f, tip.y * s * f) });
+    }
     this.totalMass = this.parts.reduce((acc, p) => acc + p.body.getMass(), 0);
 
     // strings
@@ -172,8 +191,13 @@ export class Puppet {
 
   // ---------------------------------------------------------------- input
   /** Called once per tracking sample. `raw` = hand assigned to this puppet or null. */
-  onHand(raw: Control | null, now: number) {
+  onHand(raw: Control | null, now: number, locked = false) {
     if (!raw) { this.seenFrames = 0; return; }
+    if (locked && this.control) {   // ultimate gesture: keep the strings where they were
+      this.lastSeen = now;
+      this.seenFrames++;
+      return;
+    }
     const dt = Math.min(0.2, (now - this.lastSample) / 1000);
     this.lastSample = now;
     if (now - this.lastSeen > CFG.loseAfter * 1000) this.filters.forEach((f) => f.reset());
@@ -183,6 +207,7 @@ export class Puppet {
       palm: this.filters[0].filter(raw.palm, dt),
       tips: raw.tips.map((t, i) => this.filters[i + 1].filter(t, dt)),
       indexRight: raw.indexRight,
+      lm: raw.lm,
     };
   }
 
@@ -190,9 +215,10 @@ export class Puppet {
   update(dt: number, now: number) {
     this.stateTime += dt;
     this.staggerT = Math.max(0, this.staggerT - dt);
-    const present = now - this.lastSeen < CFG.loseAfter * 1000;
+    const present = now - this.lastSeen < CFG.loseAfter * 1000 || now < this.graceUntil;
     if (this.state !== "DETACHED" && !present) this.detach(now);
-    else if (this.state === "DETACHED" && this.seenFrames >= CFG.attachFrames && this.control) this.reattach();
+    else if (this.state === "DETACHED" && this.seenFrames >= CFG.attachFrames && this.control
+      && now >= this.noAttachUntil) this.reattach();
     else if (this.state === "REATTACHING" && this.stateTime >= CFG.growTime + CFG.standTime) this.setState("ATTACHED");
 
     if (this.state === "ATTACHED") this.strength = 1;
@@ -224,6 +250,7 @@ export class Puppet {
   }
 
   private detach(now: number) {
+    if (this.state !== "DETACHED") this.onEvent?.("cut");
     this.droppedTips = this.strings.map((st) => this.control?.tips[st.slot] ?? this.anchorPx(st));
     this.detachedAt = now;
     this.control = null;
@@ -265,7 +292,38 @@ export class Puppet {
       st.startLen = null;
     }
     this.setState("REATTACHING");
+    this.onEvent?.("attach");
   }
+
+  /** Keep the hand counted as present until `until` (ms). */
+  holdPresence(until: number) { this.graceUntil = Math.max(this.graceUntil, until); }
+
+  /** Cut the strings now and keep them cut for `seconds`. */
+  forceDetach(now: number, seconds: number) {
+    if (this.state !== "DETACHED") this.detach(now);
+    this.noAttachUntil = Math.max(this.noAttachUntil, now + seconds * 1000);
+    this.seenFrames = 0;
+  }
+
+  /** The body under a stage-pixel point, if any. */
+  hitTest(x: number, y: number): Body | null {
+    const p = Vec2(m(x), m(y));
+    for (const part of this.parts)
+      for (let f = part.body.getFixtureList(); f; f = f.getNext())
+        if (f.testPoint(p)) return part.body;
+    return null;
+  }
+
+  /** Blade of each weapon in stage px (for trails and ice aura). */
+  weaponSegments(): WeaponSeg[] {
+    return this.weapons.map((w) => {
+      const t = w.body.getWorldPoint(w.tip), b = w.body.getWorldPoint(w.base);
+      return { key: `${this.id}:${w.id}`, tip: { x: px(t.x), y: px(t.y) }, base: { x: px(b.x), y: px(b.y) } };
+    });
+  }
+
+  /** Head anchor in stage px. */
+  headPx(): Pt { return this.anchorPx(this.strings.find((st) => st.isHead)!); }
 
   // ---------------------------------------------------------------- physics
   /** Call before every fixed physics step. */

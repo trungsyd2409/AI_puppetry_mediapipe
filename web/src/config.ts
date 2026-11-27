@@ -76,6 +76,28 @@ export const CFG = {
     shakePx: 10,                   // screen shake at the strongest hit
   },
 
+  // ultimates
+  ult: {
+    gestureWindow: 0.35,       // s: index up -> index down must happen within this time
+    angleTolerance: 45,        // degrees from straight up / down that still count
+    lockAfter: 0.3,            // s the strings stay locked after the L pose is seen
+    cooldown: 10,              // s
+    kinds: { chien_binh_tuyet: "giantSword", ve_binh_streltsy: "swordRain" } as Record<string, "giantSword" | "swordRain">,
+    giantSword: { fallTime: 0.7, detach: 1, hitWidth: 34, knockback: 7 },
+    swordRain: { duration: 4, perSecond: 14, spread: 300, knockback: { min: 6, max: 11 } },
+    testKeys: ["u", "i"],      // keyboard: cast for puppet 1 / puppet 2 (mouse testing)
+  },
+
+  // weapon trails and ice aura
+  weaponFx: {
+    bladeFrom: { spear: 0.55, saber: 0.12 } as Record<string, number>,   // where the glowing part starts
+    trailTime: 0.16,           // s of history in the trail
+    trailMinSpeed: 250,        // px/s before a trail shows
+    swingSoundSpeed: 900,      // px/s tip speed that plays a whoosh
+  },
+
+  sound: { enabled: true, volume: 0.6 },
+
   // landmark smoothing (One Euro filter, stage pixels)
   euro: { minCutoff: 1.4, beta: 0.01, dCutoff: 1.0 },
 };

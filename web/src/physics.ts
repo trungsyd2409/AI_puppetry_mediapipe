@@ -19,5 +19,8 @@ export function createWorld(stage: Stage): World {
   const x0 = m(CFG.wallMargin), x1 = m(w - CFG.wallMargin);
   ground.createFixture(new EdgeShape(Vec2(x0, m(-2000)), Vec2(x0, m(stage.floorY))), fix);
   ground.createFixture(new EdgeShape(Vec2(x1, m(-2000)), Vec2(x1, m(stage.floorY))), fix);
+  // invisible ceiling at the top of the visible stage, so flung puppets bounce back
+  const cy = m(CFG.view.stageCropY + 4);
+  ground.createFixture(new EdgeShape(Vec2(x0, cy), Vec2(x1, cy)), fix);
   return world;
 }

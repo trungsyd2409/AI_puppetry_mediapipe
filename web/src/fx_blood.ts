@@ -31,6 +31,7 @@ export class HitFx {
       });
     }
     this.bursts.push({ x, y, t: 0, angle: base, k });
+    if (this.drops.length > 450) this.drops.splice(0, this.drops.length - 450);
   }
 
   clash(x: number, y: number) {
@@ -51,7 +52,7 @@ export class HitFx {
     this.drops = this.drops.filter((d) => !(d.y >= d.groundY && d.vy > 0) && d.y < this.floorY + 300);
     for (const s of this.stains) s.t += dt;
     this.stains = this.stains.filter((s) => s.t < s.life);
-    if (this.stains.length > 400) this.stains.splice(0, this.stains.length - 400);
+    if (this.stains.length > 260) this.stains.splice(0, this.stains.length - 260);
     for (const b of this.bursts) b.t += dt;
     this.bursts = this.bursts.filter((b) => b.t < 0.18);
     for (const s of this.sparks) { s.t += dt; s.vy += 900 * dt; s.x += s.vx * dt; s.y += s.vy * dt; }

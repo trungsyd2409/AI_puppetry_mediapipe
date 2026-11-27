@@ -103,7 +103,10 @@ export class SnowFx implements SceneFx {
     this.smoke = this.smoke.filter((p) => p.t < p.life);
   }
 
+  onGust?: (seconds: number) => void;
+
   private startGust() {
+    this.onGust?.(CFG.ambience.gustDuration);
     this.gustStart = this.time;
     this.nextGust = this.time + CFG.ambience.gustDuration + pick(CFG.ambience.gustEvery);
     for (let i = 0; i < 6; i++) {

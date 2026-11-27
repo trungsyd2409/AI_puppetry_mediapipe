@@ -24,6 +24,8 @@ export class Combat {
   private lastHit = new Map<string, number>();
   /** 0..1, decays: screen shake amount for the renderer. */
   shake = 0;
+  onHit?: (k: number) => void;
+  onClash?: () => void;
 
   constructor(world: World, private fx: HitFx) {
     world.on("begin-contact", (c) => this.onContact(c));
@@ -59,6 +61,7 @@ export class Combat {
       const X = px(h.point.x), Y = px(h.point.y);
       if (h.kind === "clash") {
         this.fx.clash(X, Y);
+        this.onClash?.();
         this.shake = Math.max(this.shake, 0.3);
         continue;
       }
@@ -71,10 +74,14 @@ export class Combat {
       const kick = C.knockback.min + (C.knockback.max - C.knockback.min) * k;
       h.target.knockback(h.body, Vec2(h.point.x, h.point.y), dir, kick);
       this.fx.blood(X, Y, dir.x, dir.y, k);
+      this.onHit?.(k);
       this.shake = Math.max(this.shake, 0.4 + 0.6 * k);
     }
     this.pending.length = 0;
   }
 
   update(dt: number) { this.shake = Math.max(0, this.shake - dt * 3); }
+
+  /** Shake from outside (ultimates). */
+  kick(amount: number) { this.shake = Math.max(this.shake, amount); }
 }

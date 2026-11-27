@@ -43,7 +43,7 @@ Trái/phải của rối tính theo phía trên màn hình.
 
 - Di chuyển cả bàn tay: rối di chuyển theo.
 - Hai tay: tay trái điều khiển rối bên trái, tay phải điều khiển rối bên phải.
-- Phím tắt: `C` camera, `M` chuột, `R` reset, `D` xem collider.
+- Phím tắt: `C` camera, `M` chuột, `R` reset, `D` xem collider, `S` âm thanh, `U`/`I` đại chiêu.
 - Dây đầu dài cố định (3/10 chiều cao màn hình), dây tay và dây gối chùng thêm một đoạn, tất cả hơi đàn hồi. Đưa tay lên cao thì dây căng và nhấc rối lên, hạ tay xuống thì dây chùng và rối ngồi xuống.
 
 ## Đánh nhau
@@ -51,6 +51,24 @@ Trái/phải của rối tính theo phía trên màn hình.
 - Vũ khí (thương, kiếm) chạm vào người con rối kia đủ nhanh là một đòn: người bị đánh văng ra sau, dây chùng một nhịp rồi kéo lại, máu bắn ra và loang trên nền.
 - Hai vũ khí chạm nhau thì tóe tia lửa.
 - Chỉnh trong mục `combat` của `web/src/config.ts`: `minHitSpeed` (tốc độ tối thiểu để tính đòn), `knockback` (lực hất), `staggerTime` (thời gian dây chùng), `cooldown`, `shakePx` (độ rung màn hình). Thêm vũ khí mới bằng cách ghi tên mảnh vào `weapons`.
+
+## Đại chiêu
+
+Cử chỉ: bàn tay hình chữ L (ngón trỏ duỗi, ngón cái duỗi ngang, 3 ngón còn lại co), ngón trỏ chỉ **lên**, rồi lật nhanh cho ngón trỏ chỉ **xuống** trong 0.35 giây. Trong lúc làm cử chỉ, dây của rối bị khóa nên rối không bị giật.
+
+| Nhân vật | Đại chiêu |
+|---|---|
+| Chiến binh tuyết | Kiếm băng khổng lồ rơi xuống đầu đối thủ (né được). Trúng thì đối thủ mất dây 1 giây. |
+| Vệ binh Streltsy | Mưa kiếm băng quanh đối thủ trong 4 giây. Đối thủ mất dây suốt 4 giây và bị hất văng khắp màn hình. |
+
+- Hồi chiêu 10 giây, vòng tròn trên đầu mỗi nhân vật cho biết khi nào dùng lại được.
+- Test bằng phím: `U` (nhân vật 1), `I` (nhân vật 2).
+- Chỉnh trong mục `ult` của `web/src/config.ts`: `gestureWindow` (thời gian lật tay), `angleTolerance`, `cooldown`, thông số từng chiêu.
+- Vũ khí có vệt sáng khi vung và hào quang băng (mục `weaponFx`).
+
+## Âm thanh
+
+Âm thanh được tổng hợp bằng Web Audio, không cần file: vung vũ khí, trúng đòn, chạm kiếm, đứt và nối dây, tung chiêu, kiếm rơi, va chạm, mưa kiếm, gió, lửa trại. Phím `S` bật/tắt, âm lượng ở `sound.volume`.
 
 ## Chỉnh cảm giác điều khiển
 

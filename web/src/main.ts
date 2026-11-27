@@ -10,6 +10,10 @@ import { ThuyDinhFx } from "./fx_thuydinh";
 import { SnowFx } from "./fx_snow";
 import { HitFx } from "./fx_blood";
 import { Combat } from "./combat";
+import { GestureTracker } from "./gesture";
+import { Sfx } from "./sfx";
+import { WeaponFx } from "./weaponfx";
+import { Ultimates } from "./ult";
 import type { World } from "planck";
 
 const LABELS: Record<string, string> = { teu: "Chú Tễu", co_gai: "Cô gái áo dài", chien_binh_tuyet: "Chiến binh tuyết", ve_binh_streltsy: "Vệ binh Streltsy" };
@@ -33,6 +37,11 @@ let lastHands: HandObs[] = [];
 let showDebug = false;
 let hitFx: HitFx;
 let combat: Combat;
+let wfx: WeaponFx;
+let ult: Ultimates;
+const sfx = new Sfx();
+const trackers = new Map<Puppet, GestureTracker>();
+const tracker = (p: Puppet) => { let t = trackers.get(p); if (!t) { t = new GestureTracker(); trackers.set(p, t); } return t; };
 
 // ------------------------------------------------------------------ mapping
 // Screen = square canvas. Top `split` px: mirrored webcam (cover-fit).
@@ -65,6 +74,7 @@ function toControl(h: HandObs): Control {
     tips: [4, 8, 12, 16, 20].map((i) => camToStage(h.lm[i])),
     // right hand -> index side wired to the screen-left limbs; fall back to the knuckles if unknown
     indexRight: h.right !== undefined ? !h.right : h.lm[5].x > h.lm[17].x,
+    lm: h.lm,
   };
 }
 
@@ -74,6 +84,8 @@ function spawn() {
   const ids = SCENE.puppets.filter((id) => assets.some((a) => a.id === id));
   const xs = ids.length === 1 ? [800] : ids.map((_, i) => 670 + (260 * i) / Math.max(1, ids.length - 1));
   puppets = ids.map((id, i) => new Puppet(world, assets.find((a) => a.id === id)!, stage, xs[i], LABELS[id] ?? id));
+  trackers.clear();
+  for (const p of puppets) p.onEvent = (e) => (e === "cut" ? sfx.stringCut() : sfx.stringAttach());
 }
 
 // Which hand drives which puppet: sort hands left->right and give them to the puppets
@@ -92,7 +104,10 @@ function assign(controls: Control[]): Map<Puppet, Control> {
     return out;
   }
   const c = controls[0];
-  const owner = lastOwner ?? byX.reduce((best, p) =>
+  // a puppet whose hand is mid-gesture (blurred, maybe lost) must not grab the other hand
+  const free = byX.filter((p) => !tracker(p).busy(performance.now()));
+  const pool = free.length ? free : byX;
+  const owner = (lastOwner && pool.includes(lastOwner) ? lastOwner : null) ?? pool.reduce((best, p) =>
     Math.abs(p.torsoX() - c.palm.x) < Math.abs(best.torsoX() - c.palm.x) ? p : best);
   out.set(owner, c);
   lastOwner = owner;
@@ -132,11 +147,22 @@ function frame(now: number) {
   if (obs) {
     lastHands = obs;
     const owners = assign(obs.map(toControl));
-    for (const p of puppets) p.onHand(owners.get(p) ?? null, now);
+    const asp = (video.videoWidth || 640) / (video.videoHeight || 480);
+    for (const p of puppets) {
+      const c = owners.get(p) ?? null;
+      const g = tracker(p).update(c?.lm ?? null, now, asp);
+      p.holdPresence(g.graceUntil);
+      p.onHand(c, now, g.locked);
+      if (g.fire) castUlt(p, now);
+    }
   }
 
   for (const p of puppets) p.update(dt, now);
   amb.update(dt);
+  ult.update(dt, now);
+  for (const p of puppets) for (const sg of p.weaponSegments()) wfx.track(sg.key, sg.tip, sg.base);
+  wfx.update(dt);
+  if (SCENE.fx === "snow") sfx.crackle(dt);
   hitFx.update(dt);
   combat.update(dt);
   const sh = combat.shake * combat.shake * CFG.combat.shakePx;
@@ -174,7 +200,10 @@ function render(now: number) {
   stageTransform();
   amb.drawBackground(ctx);
   hitFx.drawBack(ctx);
+  ult.drawBack(ctx);
   for (const p of puppets) p.draw(ctx);
+  wfx.draw(ctx);
+  ult.drawFront(ctx);
   hitFx.drawFront(ctx);
   amb.drawForeground(ctx);
   ctx.restore();
@@ -187,6 +216,7 @@ function render(now: number) {
   // strings cross both halves
   stageTransform();
   for (const p of puppets) p.drawStrings(ctx, now);
+  ult.drawUi(ctx, puppets, now);
   if (showDebug) puppets.forEach((p) => p.drawDebug(ctx));
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 
@@ -201,7 +231,13 @@ async function boot() {
   world = createWorld(stage);
   hitFx = new HitFx(stage.floorY);
   combat = new Combat(world, hitFx);
+  combat.onHit = (k) => sfx.hit(k);
+  combat.onClash = () => sfx.clash();
+  wfx = new WeaponFx();
+  wfx.onSwing = (k) => sfx.swing(k);
+  ult = new Ultimates(stage.floorY, CFG.view.stageCropY, hitFx, sfx, wfx, (k) => combat.kick(k));
   amb = SCENE.fx === "snow" ? new SnowFx(stage) : new ThuyDinhFx(stage);
+  amb.onGust = (sec) => sfx.gust(sec);
   spawn();
   statusEl.textContent = "Chọn cách điều khiển.";
   requestAnimationFrame(frame);
@@ -209,10 +245,20 @@ async function boot() {
 
 document.title = SCENE.title;
 document.getElementById("title")!.textContent = SCENE.title;
-document.getElementById("btnCamera")!.onclick = () => useCamera();
-document.getElementById("btnMouse")!.onclick = () => useMouse();
+function castUlt(p: Puppet | undefined, now: number) {
+  if (!p) return;
+  ult.cast(p, puppets.find((q) => q !== p) ?? null, now);
+}
+
+document.getElementById("btnCamera")!.onclick = () => { sfx.unlock(); useCamera(); };
+document.getElementById("btnMouse")!.onclick = () => { sfx.unlock(); useMouse(); };
+window.addEventListener("pointerdown", () => sfx.unlock());
 window.addEventListener("keydown", (e) => {
+  sfx.unlock();
   const k = e.key.toLowerCase();
+  const ui = CFG.ult.testKeys.indexOf(k);
+  if (ui >= 0) castUlt(puppets[ui], performance.now());
+  else if (k === "s") sfx.toggle();
   if (k === "d") showDebug = !showDebug;
   else if (k === "r") spawn();
   else if (k === "c") useCamera();
@@ -226,4 +272,4 @@ boot().catch((e) => {
 });
 
 // handy for automated tests
-(window as unknown as { __app: object }).__app = { get puppets() { return puppets; }, useMouse, get amb() { return amb; }, get world() { return world; }, get combat() { return combat; } };
+(window as unknown as { __app: object }).__app = { get puppets() { return puppets; }, useMouse, get amb() { return amb; }, get world() { return world; }, get combat() { return combat; }, get ult() { return ult; }, castUlt, sfx };

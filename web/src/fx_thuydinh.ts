@@ -124,7 +124,10 @@ export class ThuyDinhFx implements SceneFx {
     this.streaks = this.streaks.filter((s) => s.x > -s.len - 100 && s.x < W + s.len + 100);
   }
 
+  onGust?: (seconds: number) => void;
+
   private startGust() {
+    this.onGust?.(CFG.ambience.gustDuration);
     this.gustStart = this.time;
     this.gustDir = Math.random() < 0.5 ? -1 : 1;
     this.nextGust = this.time + CFG.ambience.gustDuration + pick(CFG.ambience.gustEvery);

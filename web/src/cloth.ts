@@ -73,4 +73,6 @@ export interface SceneFx {
   drawBackground(ctx: CanvasRenderingContext2D): void;   // behind the puppets
   drawForeground(ctx: CanvasRenderingContext2D): void;   // in front of the puppets
   debugTrigger(kind: string): void;
+  /** Set by the app: called when a gust of wind starts (seconds it lasts). */
+  onGust?: (seconds: number) => void;
 }
