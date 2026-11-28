@@ -1,19 +1,20 @@
 // Luom runner game flow:
 //   TITLE (curtain closed) -> RESETTING -> OPENING -> READY (Luom stands, strings grow from the hand)
-//   -> PLAY (he runs; the hand height moves him: lower = duck, flick up = jump)
+//   -> PLAY (he skips along; a quick upward flick of the hand = jump; he must land before the next one)
 //   -> hit: he trips and gets up (10 hearts) -> 0 hearts: DEAD -> curtain -> GAMEOVER (score, best) -> ...
 import type { Control } from "../puppet";
 import { Background } from "../giong/background";
 import { Curtain } from "../giong/curtain";
 import { drawSprite } from "../giong/data";
-import { apply, clamp, smoothstep } from "../giong/mat";
+import { clamp, smoothstep } from "../giong/mat";
 import { HandRole } from "../giong/ropes";
 import { Boy } from "./boy";
 import type { LuomData, SkyTime } from "./data";
 import { Hazards } from "./hazards";
 import { L } from "./lcfg";
+import { lightOverlay } from "./prep";
 
-export const BUILD = "luom build 28-11 22:30";
+export const BUILD = "luom build 28-11 23:10";
 console.info("[luom]", BUILD);
 
 export type LState = "TITLE" | "RESETTING" | "OPENING" | "READY" | "PLAY" | "DEAD" | "GAMEOVER";
@@ -50,7 +51,7 @@ export class LuomGame {
   readonly hz: Hazards;
   readonly bg: Background;
   readonly curtain: Curtain;
-  readonly hand = new HandRole("luom", "#C9A35A", true);
+  readonly hand = new HandRole("luom", "#C9A35A");
   private dust: Puff[] = [];
   private notes: Note[] = [];
   private popups: Popup[] = [];
@@ -58,7 +59,13 @@ export class LuomGame {
   private startKey = false;
   private nextNote = 1;
   private lastStep = 0;
-  private paper: CanvasPattern | null = null;
+  private overlay: HTMLCanvasElement | null = null;
+  private vignette: HTMLCanvasElement | null = null;
+  private handY = NaN;
+  private handT = 0;
+  private handV = 0;        // upward speed of the hand (stage px/s)
+  private armed = true;
+  jumps = 0;
   private G: number;
   private cropY: number;
 
@@ -66,14 +73,13 @@ export class LuomGame {
     this.cropY = cropY;
     this.G = data.stage.groundY;
     this.boy = new Boy(data.rig, this.G);
-    const hc = data.rig.headCenter;
-    const headY = apply(this.boy.M.head, hc[0], hc[1]).y;
-    this.hz = new Hazards(data.fx, this.G, this.boy.x, headY);
+    this.boy.maxJump = L.maxJumpFrac * (this.G - cropY);
+    this.hz = new Hazards(data.fx, this.G, this.boy.x);
     this.bg = new Background(data.stage, data.fx);
     this.curtain = new Curtain(data.fx, cropY);
     this.curtain.title = "LƯỢM";
     this.curtain.style = { title: "#5A321B", card: "#E6D4AA", edge: INK, accent: SON, text: INK, width: 880 };
-    this.curtain.lines = ["Run Luom through the ripe rice fields", "Flick the hand up to jump · lower it to duck",
+    this.curtain.lines = ["Run Luom through the ripe rice fields", "Flick the hand up quickly to jump over the dangers",
       "Index finger: shoulder · middle finger: cap",
       "Show a hand for 1 s (or press Enter) to start"];
   }
@@ -82,8 +88,7 @@ export class LuomGame {
   pressStart() { this.startKey = true; }
 
   onKey(code: string, down: boolean) {
-    if (code === "Space" && down) this.boy.keyJump();
-    if (code === "ArrowDown") this.boy.keyDuck = down;
+    if (code === "Space" && down && (this.state === "PLAY" || this.state === "READY")) { if (this.boy.jump(L.keyJump)) this.jumps++; }
   }
 
   /** One hand drives Luom: the hand nearest to him on screen. */
@@ -92,7 +97,17 @@ export class LuomGame {
     const c = controls.length ? [...controls].sort((a, b) => Math.abs(a.palm.x - this.boy.x) - Math.abs(b.palm.x - this.boy.x))[0] : null;
     const allow = this.state === "OPENING" || this.state === "READY" || this.state === "PLAY";
     this.hand.onHand(c, now, allow);
+    // hand speed from the filtered fingertips, measured per camera sample
+    if (c && this.hand.state !== "DETACHED") {
+      const y = (this.hand.tips[0].y + this.hand.tips[1].y) / 2;
+      const dt = (now - this.handT) / 1000;
+      if (!Number.isNaN(this.handY) && dt > 0.005 && dt < 0.25) this.handV = this.handV * 0.35 + ((this.handY - y) / dt) * 0.65;
+      this.handY = y; this.handT = now;
+    } else { this.handY = NaN; this.handV = 0; }
   }
+
+  /** Jump height for a flick of speed v. */
+  private flickHeight(v: number) { return L.jumpMin + (v - L.flickSpeed) * L.flickGain; }
 
   get distance() { return Math.floor(this.scroll / L.pxPerMetre); }
   get score() { return this.letters * L.letterPoints + this.distance; }
@@ -143,13 +158,19 @@ export class LuomGame {
     // ---- Luom
     const b = this.boy;
     const playing = this.state === "PLAY";
-    b.ropes = this.state === "READY" || playing ? this.hand.ropes() : [null, null];
     const d = clamp(this.playTime / L.rampTime, 0, 1);
     const target = playing ? (L.speed[0] + (L.speed[1] - L.speed[0]) * d) * (b.tripping ? 0.3 : 1) : 0;
     this.speed += (target - this.speed) * Math.min(1, dt * (b.tripping || this.state === "DEAD" ? 4 : 1.5));
     b.run += ((playing ? 1 : 0) - b.run) * Math.min(1, dt * 4);
-    b.stepHz = L.stepHz * Math.max(0.6, this.speed / L.speed[0]);
+    b.skipHz = L.skipHz * Math.max(0.7, Math.sqrt(this.speed / L.speed[0]));
     const steps = Math.floor(b.ph / Math.PI);
+    // jump: a quick upward flick while on the path; land before the next one
+    if (performance.now() - this.handT > 150) this.handV *= Math.pow(0.02, dt);   // no new camera sample: forget the speed
+    if ((playing || this.state === "READY") && this.hand.attached) {
+      if (b.grounded && !this.armed && this.handV < L.flickRearm) this.armed = true;
+      if (this.armed && this.handV > L.flickSpeed && b.jump(this.flickHeight(this.handV))) { this.armed = false; this.jumps++; }
+      else if (!b.grounded) b.boost(this.flickHeight(this.handV));
+    }
     b.update(dt, this.time);
 
     if (playing) {
@@ -172,7 +193,7 @@ export class LuomGame {
 
     // ---- dust, notes, popups
     const feet = b.feet();
-    if (b.run > 0.5 && b.e < 4 && !b.tripping && Math.floor(b.ph / Math.PI) !== steps && this.time - this.lastStep > 0.15) {
+    if (b.run > 0.5 && b.e < 4 && !b.tripping && Math.floor(b.ph / Math.PI) !== steps && this.time - this.lastStep > 0.12) {
       this.lastStep = this.time;
       this.dust.push({ x: feet.x, y: this.G - 6, age: 0, s: 0.5 });
     }
@@ -246,25 +267,18 @@ export class LuomGame {
     this.curtain.draw(ctx, t);
   }
 
-  /** Time-of-day tint, warm vignette centred on Luom, do paper grain over everything. */
+  /** Time-of-day tint, warm vignette centred on Luom and do paper grain, all from images baked once. */
   private drawLight(ctx: CanvasRenderingContext2D, tint: number[], G: number) {
-    const st = this.data.stage, V = st.vignette;
+    const st = this.data.stage, V = st.vignette, y0 = this.cropY;
+    if (!this.overlay) {
+      this.overlay = lightOverlay(st.paper, y0, this.boy.x + 30, G - 170, V.color, V.strength, V.radius, 0.3, true);
+      this.vignette = lightOverlay(st.paper, y0, this.boy.x + 30, G - 170, V.color, 0.6, V.radius, 0, true);
+    }
     ctx.save();
-    if (tint[3] > 0.001) {
-      ctx.globalCompositeOperation = "multiply";
-      ctx.fillStyle = rgb(tint, Math.min(1, tint[3] * 3));
-      ctx.fillRect(-60, this.cropY - 10, 1720, 1000);
-    }
-    ctx.globalCompositeOperation = "source-over";
-    const vx = this.boy.x + 30, vy = G - 170, vs = V.strength + Math.max(0, this.tod - 0.6) * 0.5;
-    const vg = ctx.createRadialGradient(vx, vy, 160, vx, vy, 1150 * V.radius + 300);
-    vg.addColorStop(0, rgb(V.color, 0)); vg.addColorStop(0.45, rgb(V.color, vs * 0.25)); vg.addColorStop(1, rgb(V.color, vs));
-    ctx.fillStyle = vg; ctx.fillRect(-60, this.cropY - 10, 1720, 1000);
-    if (!this.paper) this.paper = ctx.createPattern(st.paper, "repeat");
-    if (this.paper) {
-      ctx.globalCompositeOperation = "multiply"; ctx.globalAlpha = 0.35;
-      ctx.fillStyle = this.paper; ctx.fillRect(-60, this.cropY - 10, 1720, 1000);
-    }
+    if (tint[3] > 0.001) { ctx.fillStyle = rgb(tint, Math.min(0.5, tint[3] * 1.4)); ctx.fillRect(-60, y0, 1720, 960 - y0); }
+    ctx.drawImage(this.overlay, 0, y0, 1600, 900 - y0);
+    const dusk = Math.max(0, this.tod - 0.6) / 0.4;
+    if (dusk > 0.01) { ctx.globalAlpha = dusk; ctx.drawImage(this.vignette!, 0, y0, 1600, 900 - y0); }
     ctx.restore();
   }
 
@@ -309,7 +323,7 @@ export class LuomGame {
     if (msg) { ctx.font = "bold 32px Georgia, serif"; this.text(ctx, msg, 800, this.cropY + 190); }
     if (this.state === "PLAY" && this.playTime < 6 && this.hand.attached) {
       ctx.font = "26px Georgia, serif";
-      this.text(ctx, "Flick the hand up to jump · lower it to duck", 800, this.cropY + 190, `rgba(235,221,184,${1 - smoothstep(4, 6, this.playTime)})`);
+      this.text(ctx, "Flick the hand up quickly to jump", 800, this.cropY + 190, `rgba(235,221,184,${1 - smoothstep(4, 6, this.playTime)})`);
     }
     ctx.fillStyle = "rgba(235,221,184,0.5)";
     ctx.font = "15px Georgia, serif";
@@ -324,7 +338,7 @@ export class LuomGame {
     for (const c of this.boy.hitCircles()) { ctx.beginPath(); ctx.arc(c.c.x, c.c.y, c.r, 0, Math.PI * 2); ctx.stroke(); }
     this.hz.drawDebug(ctx);
     ctx.fillStyle = "#fff"; ctx.font = "16px monospace"; ctx.textAlign = "left";
-    ctx.fillText(`e ${this.boy.e.toFixed(0)}  ve ${this.boy.ve.toFixed(0)}  speed ${this.speed.toFixed(0)}  tod ${this.tod.toFixed(2)}`, 20, this.cropY + 170);
+    ctx.fillText(`e ${this.boy.e.toFixed(0)}  hand ${this.handV.toFixed(0)}  armed ${this.armed}  speed ${this.speed.toFixed(0)}  tod ${this.tod.toFixed(2)}`, 20, this.cropY + 170);
     ctx.restore();
   }
 }

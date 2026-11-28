@@ -3,28 +3,33 @@ export const L = {
   scale: 0.85,            // stage px per rig design unit
   x: 420,                 // stage x of Luom's hips
 
-  // body height on the strings (marionette): the strings carry the body, gravity pulls it down.
-  // Lower the hand -> he crouches (duck). Raise it -> he is lifted. Flick it up -> he flies up (jump).
-  gravity: 2200,
-  maxRise: 1250,          // px/s cap of the upward speed a flick can give (~280 px jump)
-  flickMin: 420,          // px/s the strings must rise to count as a flick
-  flickBoost: 1.6,        // the flick speed is multiplied by this
-  deadZone: 24,           // px the hand may drift down before he starts to crouch
-  keyJump: 1150,          // px/s for the Space key (mouse / keyboard test)
+  // jump: a quick upward flick of the hand. Holding the hand up does nothing more.
+  // He must land before he can jump again.
+  gravity: 2300,
+  flickSpeed: 430,        // stage px/s the hand must rise to start a jump
+  flickRearm: 180,        // the hand must slow below this (on the ground) before the next jump
+  jumpMin: 200,           // px the feet rise for the smallest flick (clears every obstacle)
+  maxJumpFrac: 0.6,       // highest jump = 3/5 of the play area height (path to the top of the stage)
+  flickGain: 0.2,         // extra height per px/s of flick speed above flickSpeed
+  boostWindow: 0.12,      // s after take-off during which a faster flick still adds height
+  keyJump: 260,           // px for the Space key (mouse / keyboard test)
 
-  // run
+  // skipping run (chay nhay chan sao): one skip per half cycle, a little hop on each
+  skipHz: 2.3,            // skips per second at the start speed
+  skipHop: 32,            // px the body hops on each skip
+
   speed: [300, 470] as [number, number],   // ground scroll px/s, easy -> hard
   rampTime: 120,          // s of play until the hardest setting
-  stepHz: 1.75,           // running steps per second at the start speed
   pxPerMetre: 100,
 
-  // hazards
-  gapPx: [[760, 1150], [460, 760]] as [number, number][],   // ground distance between obstacles, easy -> hard
-  minGap: 1.3,            // s between two hazards reaching Luom
+  // hazards (all are jumped over)
+  gapPx: [[760, 1150], [480, 780]] as [number, number][],   // ground distance between obstacles, easy -> hard
+  minGap: 1.35,           // s between two hazards reaching Luom (one jump each)
   planeEvery: [[8, 12], [4.5, 7]] as [number, number][],
-  bulletEvery: [[7, 11], [3.8, 6]] as [number, number][],
-  bulletSpeed: 650,       // px/s on top of the ground speed
-  bulletWarn: 0.9,        // s of muzzle flash at the right edge before a burst
+  bulletEvery: [[7, 11], [4, 6.5]] as [number, number][],
+  bulletSpeed: 600,       // px/s on top of the ground speed
+  bulletWarn: 1.0,        // s of muzzle flash at the right edge before a burst
+  bulletHeight: 60,       // px above the path: low, so he jumps over them
   planeSpeed: 260,
   bombGravity: 900,
   blastRadius: 115,
@@ -42,5 +47,4 @@ export const L = {
   curtainOpen: 1.2,
   startHold: 1.0,
   readyHold: 0.8,         // s with the strings attached before the run starts
-  fixedDt: 1 / 120,
 };

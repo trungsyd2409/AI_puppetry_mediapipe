@@ -8,7 +8,7 @@ export interface GPart {
   origin: [number, number]; size: [number, number];
   pivot: [number, number]; pivotWorld: [number, number];
   limitDeg: [number, number] | null; density: number; colliders: Shape[];
-  img: HTMLImageElement;
+  img: HTMLImageElement | HTMLCanvasElement;
 }
 
 export interface GString { id: string; part: string; anchorWorld: [number, number]; hand: "left" | "right"; finger: string; mpLandmark: number }
@@ -21,7 +21,7 @@ export interface GRig {
   tailRoot: [number, number];
 }
 
-export interface Sprite { img: HTMLImageElement; size: [number, number]; anchor: [number, number]; pngScale: number }
+export interface Sprite { img: HTMLImageElement | HTMLCanvasElement; size: [number, number]; anchor: [number, number]; pngScale: number }
 
 export interface PropDef {
   layer: string; type: "anim" | "sway" | "smoke" | "drift" | "flock" | "spin" | "catapult";
@@ -34,7 +34,7 @@ export interface PropDef {
 
 export interface GStage {
   size: [number, number]; floorY: number; wind: number;
-  layers: { id: string; img: HTMLImageElement | null; parallax: number; front: boolean }[];
+  layers: { id: string; img: CanvasImageSource | null; parallax: number; front: boolean; y?: number }[];
   sprites: Record<string, Sprite>;
   props: PropDef[];
 }

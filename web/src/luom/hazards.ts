@@ -1,6 +1,6 @@
 // Everything that comes at Luom, plus the letters to pick up.
 //   ground things : sheaf, stump, fence (jump), craters left by bombs (jump), they ride with the path
-//   bullets       : bursts of three at head height after a muzzle flash at the right edge (duck)
+//   bullets       : low bursts of two after a muzzle flash at the right edge (jump)
 //   planes, bombs : a plane drops a bomb ahead of him; a dark mark shows where it will land;
 //                   the blast hurts if he is close, then a crater stays on the path
 //   letters       : folded letters floating over the path, some up high (jump to catch them)
@@ -43,7 +43,7 @@ export class Hazards {
   private nextBurst = 0;
   private busy: number[] = [];
 
-  constructor(private fx: Record<string, FxSprite>, private ground: number, private boyX: number, private headY: number) {
+  constructor(private fx: Record<string, FxSprite>, private ground: number, private boyX: number) {
     this.reset();
   }
 
@@ -95,7 +95,7 @@ export class Hazards {
       const arrive = this.time + L.bulletWarn + (1700 - this.boyX) / (speed + L.bulletSpeed);
       if (this.free(arrive) && this.free(arrive + 0.25)) {
         this.book(arrive); this.book(arrive + 0.25);
-        this.bursts.push({ y: this.headY + rand(-8, 8), t: 0, fired: 0 });
+        this.bursts.push({ y: G - L.bulletHeight + rand(-4, 4), t: 0, fired: 0 });
         const r = lerpR(L.bulletEvery, d);
         this.nextBurst = this.time + rand(r[0], r[1]);
       } else this.nextBurst = this.time + 0.4;
@@ -105,9 +105,9 @@ export class Hazards {
     for (const o of this.things) { o.x -= speed * dt; o.ph += dt; }
     for (const b of this.bursts) {
       b.t += dt;
-      while (b.t > L.bulletWarn + b.fired * 0.14 && b.fired < 3) { this.bullets.push({ x: 1680, y: b.y + (b.fired - 1) * 5, done: false }); b.fired++; }
+      while (b.t > L.bulletWarn + b.fired * 0.11 && b.fired < 2) { this.bullets.push({ x: 1680, y: b.y + b.fired * 3, done: false }); b.fired++; }
     }
-    this.bursts = this.bursts.filter((b) => b.fired < 3);
+    this.bursts = this.bursts.filter((b) => b.fired < 2);
     for (const b of this.bullets) b.x -= (speed + L.bulletSpeed) * dt;
     for (const p of this.planes) {
       p.x -= L.planeSpeed * dt;
@@ -184,20 +184,20 @@ export class Hazards {
       ctx.beginPath(); ctx.ellipse(b.x + b.vx * 0, this.ground + 2, 30 + 50 * k, 7 + 6 * k, 0, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
-    for (const o of this.things) if (o.kind === "crater") drawSprite(ctx, this.fx.crater, o.x, o.y, o.s);
-    for (const o of this.things) if (o.kind === "obstacle") drawSprite(ctx, this.fx[o.k], o.x, o.y, o.s, o.done ? 0.25 : 0);
+    for (const o of this.things) if (o.kind === "crater") drawSprite(ctx, this.fx[o.done ? "crater" : "crater_hi"], o.x, o.y, o.s);
+    for (const o of this.things) if (o.kind === "obstacle") drawSprite(ctx, this.fx[o.done ? o.k : o.k + "_hi"], o.x, o.y, o.s, o.done ? 0.25 : 0);
   }
 
   /** Letters, bullets, bombs and blasts (in front of Luom). */
   drawFront(ctx: CanvasRenderingContext2D, t: number) {
     for (const o of this.things) if (o.kind === "letter")
-      drawSprite(ctx, this.fx.letter, o.x, o.y + Math.sin(o.ph * 3) * 10, 1.1, Math.sin(o.ph * 2) * 0.25);
+      drawSprite(ctx, this.fx.letter_hi, o.x, o.y + Math.sin(o.ph * 3) * 10, 1.1, Math.sin(o.ph * 2) * 0.25);
     for (const b of this.bursts) {   // muzzle flash at the right edge
       const on = Math.floor(b.t * 10) % 2 === 0;
       if (on) drawSprite(ctx, this.fx.explode_0, 1590, b.y, 0.35, 0, 0.9);
     }
-    for (const b of this.bullets) drawSprite(ctx, this.fx.bullet, b.x, b.y, 1.2);
-    for (const b of this.bombs) drawSprite(ctx, this.fx.bomb, b.x, b.y, 0.9, Math.atan2(b.vy, b.vx) - Math.PI / 2);
+    for (const b of this.bullets) drawSprite(ctx, this.fx.bullet_hi, b.x, b.y, 1.2);
+    for (const b of this.bombs) drawSprite(ctx, this.fx.bomb_hi, b.x, b.y, 0.9, Math.atan2(b.vy, b.vx) - Math.PI / 2);
     for (const b of this.blasts) drawSprite(ctx, this.fx["explode_" + Math.min(3, Math.floor(b.age / 0.15))], b.x, b.y, 1.15, 0, 1 - Math.max(0, b.age - 0.5) * 3);
     void t;
   }
@@ -213,7 +213,8 @@ export class Hazards {
     }
     const bb = this.fx.bullet.box!;
     for (const b of this.bullets) ctx.strokeRect(b.x + bb[0] * 1.2, b.y + bb[1] * 1.2, (bb[2] - bb[0]) * 1.2, (bb[3] - bb[1]) * 1.2);
-    ctx.beginPath(); ctx.moveTo(0, this.headY); ctx.lineTo(1600, this.headY); ctx.setLineDash([8, 8]); ctx.stroke();
+    const by = this.ground - L.bulletHeight;
+    ctx.beginPath(); ctx.moveTo(0, by); ctx.lineTo(1600, by); ctx.setLineDash([8, 8]); ctx.stroke();
     ctx.restore();
   }
 }

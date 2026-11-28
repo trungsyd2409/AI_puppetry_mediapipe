@@ -77,8 +77,9 @@ export class Background {
     const off = -scroll * l.parallax;
     if (l.img) {
       const x = -((scroll * l.parallax) % TILE);
-      ctx.drawImage(l.img, x, 0);
-      if (l.parallax) ctx.drawImage(l.img, x + TILE, 0);
+      const y = l.y ?? 0;   // layers may be cropped to their painted rows
+      ctx.drawImage(l.img, x, y);
+      if (l.parallax) ctx.drawImage(l.img, x + TILE, y);
     }
     for (const p of this.props.get(l.id) ?? []) this.drawProp(ctx, p, off, t);
   }

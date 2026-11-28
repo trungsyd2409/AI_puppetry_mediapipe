@@ -1,16 +1,9 @@
 // Luom, a paper-cut marionette on two strings: index finger -> shoulder, middle finger -> top of the cap.
-//
-// Height works like a real marionette. The strings never stretch, they only pull; gravity pulls the
-// body down; the legs are weak, so his height is set by the strings:
-//   hand at the height it had when the strings attached -> he stands and runs
-//   hand lower (past a small dead zone)                 -> the strings let him sink: he crouches (duck)
-//   hand higher                                         -> the strings lift him off the path
-//   hand flicked up fast                                -> he keeps flying up after the hand stops (jump)
-// Without strings (hand lost) his legs carry him and he keeps running, but cannot jump or duck.
-// `e` = elevation in stage px: > 0 feet above the path, < 0 crouched (how far the cap came down).
+// He runs on his own with a skipping gait (chay nhay chan sao). A quick upward flick of the hand makes
+// him jump; the faster the flick, the higher, up to 3/5 of the play area. He must land before the next
+// jump, and holding the hand up does not keep him in the air. `e` = feet above the path (stage px).
 import type { Pt } from "../config";
 import { type M, apply, clamp, mul, rotAt, smoothstep } from "../giong/mat";
-import type { Rope } from "../giong/rider";
 import type { LuomRig } from "./data";
 import { L } from "./lcfg";
 
@@ -18,82 +11,91 @@ export interface Circle { c: Pt; r: number }
 type Angles = Record<string, number>;
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+const ease = (t: number) => t * t * (3 - 2 * t);
+/** Piecewise smooth curve through keys [[t, v], ...] for t in 0..1. */
+function curve(keys: [number, number][], t: number): number {
+  for (let i = 1; i < keys.length; i++) {
+    if (t <= keys[i][0]) {
+      const [t0, v0] = keys[i - 1], [t1, v1] = keys[i];
+      return v0 + (v1 - v0) * ease((t - t0) / Math.max(1e-6, t1 - t0));
+    }
+  }
+  return keys[keys.length - 1][1];
+}
+// one skip, s = 0..1: the "free" leg swings from behind to a high knee and comes down in front;
+// the "support" leg lands in front and pushes back. The legs swap roles every skip, so it loops.
+const FREE_THIGH: [number, number][] = [[0, 0.55], [0.45, -1.15], [1, -0.2]];
+const FREE_SHIN: [number, number][] = [[0, 0.7], [0.4, 1.55], [1, 0.15]];
+const SUP_THIGH: [number, number][] = [[0, -0.2], [1, 0.55]];
+const SUP_SHIN: [number, number][] = [[0, 0.15], [0.5, 0.3], [1, 0.7]];
 
 export class Boy {
   readonly k = L.scale;
   x = L.x;
   e = 0;
   ve = 0;
-  ph = 0;
+  ph = 0;                     // skip phase: one skip per PI
   run = 0;                    // 0 idle .. 1 running
-  stepHz = L.stepHz;
-  keyDuck = false;
+  skipHz = L.skipHz;
   hitAt = -99;
   deadAt = -99;
   dead = false;
   landed = 0;                 // > 0 for a moment after landing (dust)
+  jumpAt = -99;
+  maxJump = 400;
   M: Record<string, M> = {};
-  ropes: (Rope | null)[] = [null, null];   // [index -> shoulder, middle -> head]
 
   private parts;
   private byId;
   private hip: Pt;
   private order: number[];    // rig string index for [index finger, middle finger]
-  private base: number[] = [];          // stand anchor y per string (stage px)
-  private drop: number[][] = [];        // anchor drop per string for crouch u = 0, 0.05 .. 1
-  crouchMax = 1;
   private t = 0;
-  private lastFloor = 0;
-  private floorV = 0;
 
   constructor(readonly rig: LuomRig, readonly ground: number) {
     this.parts = [...rig.parts].sort((a, b) => a.z - b.z);
     this.byId = Object.fromEntries(rig.parts.map((p) => [p.id, p]));
     this.hip = { x: (rig.hips[0][0] + rig.hips[1][0]) / 2, y: rig.hips[0][1] };
     this.order = ["index", "middle"].map((f) => rig.strings.findIndex((s) => s.finger === f));
-    // crouch tables: how far each anchor comes down as he crouches (standing still)
-    const N = 20;
-    for (let si = 0; si < rig.strings.length; si++) this.drop.push([]);
-    for (let i = 0; i <= N; i++) {
-      const M = this.build(this.angles(i / N, 0, 0, 0, 0), 0, 0, 0);
-      rig.strings.forEach((s, si) => {
-        const y = apply(M[s.part], s.anchorWorld[0], s.anchorWorld[1]).y;
-        if (i === 0) this.base[si] = y;
-        this.drop[si].push(y - this.base[si]);
-      });
-    }
-    this.crouchMax = this.drop[this.order[1]][N];
     this.reset();
   }
 
   reset() {
-    this.e = 0; this.ve = 0; this.run = 0; this.dead = false; this.hitAt = -99; this.deadAt = -99;
-    this.ropes = [null, null]; this.keyDuck = false; this.lastFloor = 0; this.floorV = 0;
+    this.e = 0; this.ve = 0; this.run = 0; this.dead = false; this.hitAt = -99; this.deadAt = -99; this.jumpAt = -99;
     this.pose();
   }
 
+  get grounded() { return this.e <= 0.5 && this.ve <= 0; }
+
   // ------------------------------------------------------------------ pose
-  private angles(u: number, air: number, run: number, ph: number, t: number): Angles {
-    const r = run * (1 - u * 0.55) * (1 - air);
+  /** Returns the angles and the hop lift (px) of the skip. */
+  private angles(air: number, run: number, ph: number, t: number): [Angles, number] {
+    const r = run * (1 - air);
     const idle = (1 - run) * (1 - air);
+    const s = (ph % Math.PI) / Math.PI;                       // 0..1 within this skip
+    const nearFree = Math.floor(ph / Math.PI) % 2 === 0;      // which leg swings this skip
+    const fT = curve(FREE_THIGH, s), fS = curve(FREE_SHIN, s), sT = curve(SUP_THIGH, s), sS = curve(SUP_SHIN, s);
+    const [nT, nS, fT2, fS2] = nearFree ? [fT, fS, sT, sS] : [sT, sS, fT, fS];
     const a: Angles = {};
     const g = (gv: number, av: number) => mix(gv, av, air);
-    a.leg_near_thigh = g(r * 0.8 * Math.sin(ph) - u * 1.6, -1.15);
-    a.leg_far_thigh = g(r * 0.8 * Math.sin(ph + Math.PI) - u * 1.35, -0.45);
-    a.leg_near_shin = g(r * 1.1 * Math.max(0, Math.cos(ph)) + 0.08 * run + u * 2.45, 1.6);
-    a.leg_far_shin = g(r * 1.1 * Math.max(0, Math.cos(ph + Math.PI)) + 0.08 * run + u * 2.2, 1.15);
-    const lean = 0.03 + 0.08 * run + u * 0.8 - air * 0.05;
-    a.leg_near_foot = g(-(lean + a.leg_near_thigh + a.leg_near_shin) * 0.85, 0.35);
-    a.leg_far_foot = g(-(lean + a.leg_far_thigh + a.leg_far_shin) * 0.85, 0.3);
-    a.arm_near_upper = g(-0.75 * r * Math.sin(ph) - u * 0.7 + idle * 0.05 * Math.sin(t * 2), -2.0);
-    a.arm_far_upper = g(-0.75 * r * Math.sin(ph + Math.PI) - u * 0.5 - idle * 0.05 * Math.sin(t * 2), -1.5);
-    a.arm_near_fore = g(-1.0 * run - 0.25 * idle, -0.3);
-    a.arm_far_fore = g(-1.0 * run - 0.25 * idle, -0.3);
-    a.head = -0.04 + 0.05 * r * Math.sin(ph * 2) - u * 0.15 + idle * 0.03 * Math.sin(t * 1.7);
-    a.scarf = 0.14 * Math.sin(t * 9) * (0.4 + 0.6 * run) + 0.1 * run;
-    a.satchel = 0.2 * r * Math.sin(ph * 2) - air * 0.35;
+    a.leg_near_thigh = g(r * nT, -1.15);
+    a.leg_far_thigh = g(r * fT2, -0.45);
+    a.leg_near_shin = g(r * nS + idle * 0.04, 1.6);
+    a.leg_far_shin = g(r * fS2 + idle * 0.04, 1.15);
+    const lean = 0.02 + 0.06 * r;
+    a.leg_near_foot = g(-(lean + a.leg_near_thigh + a.leg_near_shin) * 0.8 + r * 0.25 * (nearFree ? Math.sin(s * Math.PI) : 0), 0.35);
+    a.leg_far_foot = g(-(lean + a.leg_far_thigh + a.leg_far_shin) * 0.8 + r * 0.25 * (nearFree ? 0 : Math.sin(s * Math.PI)), 0.3);
+    // arms swing high and opposite to the knee that comes up, like a happy child
+    const swing = Math.sin(ph);                                 // + while the near leg is free
+    a.arm_near_upper = g(r * (-0.35 + 0.95 * swing) + idle * 0.05 * Math.sin(t * 2), -2.0);
+    a.arm_far_upper = g(r * (-0.35 - 0.95 * swing) - idle * 0.05 * Math.sin(t * 2), -1.5);
+    a.arm_near_fore = g(-0.7 * run - 0.25 * idle - r * 0.35 * Math.max(0, -swing), -0.3);
+    a.arm_far_fore = g(-0.7 * run - 0.25 * idle - r * 0.35 * Math.max(0, swing), -0.3);
+    const hop = r * L.skipHop * Math.sin(Math.PI * clamp((s - 0.15) / 0.85, 0, 1));
+    a.head = -0.1 * r + 0.06 * r * Math.sin(ph * 2 + 0.6) + idle * 0.03 * Math.sin(t * 1.7);   // head up, nodding
+    a.scarf = 0.14 * Math.sin(t * 9) * (0.4 + 0.6 * run) + 0.12 * run + 0.15 * r * Math.cos(ph * 2);
+    a.satchel = -0.25 * r * Math.cos(ph * 2) - air * 0.35;
     a._lean = lean;
-    return a;
+    return [a, hop];
   }
 
   /** Matrices with the lowest point of the body on the path, then raised by `lift`. */
@@ -112,7 +114,6 @@ export class Boy {
       return M;
     };
     const M0 = make(0);
-    // lowest point: soles, knees, and when falling the head, torso and hands
     let low = -Infinity;
     for (const [id, an] of [["leg_near_foot", rig.ankles[0]], ["leg_far_foot", rig.ankles[1]]] as const) {
       low = Math.max(low, apply(M0[id], an[0] - 8, rig.groundY).y, apply(M0[id], an[0] + 28, rig.groundY).y);
@@ -123,7 +124,10 @@ export class Boy {
       low = Math.max(low, apply(M0.torso, 200, 330).y + 36 * k, apply(M0.torso, 200, 250).y + 36 * k);
       low = Math.max(low, apply(M0.arm_near_fore, 230, 352).y, apply(M0.leg_near_thigh, 218, 390).y + 12 * k);
     }
-    return make(this.ground - low - lift);
+    const dy = this.ground - low - lift;
+    // shift the matrices instead of building them again
+    for (const id in M0) M0[id] = [M0[id][0], M0[id][1], M0[id][2], M0[id][3], M0[id][4], M0[id][5] + dy];
+    return M0;
   }
 
   private tripAmount(): number {
@@ -134,15 +138,14 @@ export class Boy {
     return 1 - smoothstep(0.7, L.tripTime, s);
   }
 
-  get tripping() { return this.tripAmount() > 0 || (this.t - this.hitAt) < L.tripTime; }
+  get tripping() { return this.t - this.hitAt < L.tripTime; }
   get invulnerable() { return this.t - this.hitAt < L.invuln || this.dead; }
 
   pose() {
-    const u = clamp(-this.e / this.crouchMax, 0, 1);
-    const air = smoothstep(6, 50, this.e);
+    const air = smoothstep(4, 40, this.e);
     let trip = this.tripAmount(), lie = 0;
     if (this.dead) { const s = this.t - this.deadAt; trip = smoothstep(0, 0.35, s); lie = smoothstep(0.25, 0.8, s); }
-    const a = this.angles(u * (1 - trip), air * (1 - trip), this.run * (1 - trip), this.ph, this.t);
+    const [a, hop] = this.angles(air * (1 - trip), this.run * (1 - trip), this.ph, this.t);
     if (trip > 0) {   // stumble forward: arms out, legs kick back
       a.arm_near_upper = mix(a.arm_near_upper, -2.4, trip); a.arm_far_upper = mix(a.arm_far_upper, -2.0, trip);
       a.arm_near_fore = mix(a.arm_near_fore, -0.2, trip); a.arm_far_fore = mix(a.arm_far_fore, -0.2, trip);
@@ -151,60 +154,36 @@ export class Boy {
       a.head = mix(a.head, -0.45, trip);
     }
     const fall = trip * 1.15 + lie * 0.4;
-    this.M = this.build(a, Math.max(0, this.e), fall, lie);
+    this.M = this.build(a, Math.max(0, this.e) + hop * (1 - air), fall, lie);
   }
 
   // ------------------------------------------------------------------ physics
-  /** Lowest elevation the strings allow (they only pull). */
-  private floor(): number {
-    let req = -Infinity, any = false;
-    this.ropes.forEach((r, i) => {
-      if (!r) return;
-      any = true;
-      const si = this.order[i], s = this.rig.strings[si];
-      const ax = apply(this.M[s.part], s.anchorWorld[0], s.anchorWorld[1]).x;
-      const dx = ax - r.F.x;
-      const v = Math.abs(dx) < r.L ? Math.sqrt(r.L * r.L - dx * dx) : 0;
-      const lowest = r.F.y + v;                  // the anchor cannot hang lower than this
-      const d = lowest - this.base[si] - L.deadZone;   // > 0: room to sink, < 0: lifted
-      let e: number;
-      if (d <= -L.deadZone) e = -d - L.deadZone;
-      else if (d <= 0) e = 0;
-      else {
-        const tb = this.drop[si], n = tb.length - 1;
-        let u = 1;
-        for (let j = 1; j <= n; j++) if (tb[j] >= d) { u = (j - 1 + (d - tb[j - 1]) / Math.max(1e-6, tb[j] - tb[j - 1])) / n; break; }
-        e = -u * this.crouchMax;
-      }
-      req = Math.max(req, e);
-    });
-    if (!any) return this.keyDuck ? -this.crouchMax : 0;
-    return this.keyDuck ? Math.min(req, -this.crouchMax) : req;
+  /** Start a jump of `h` px (only from the path). Returns true if he jumped. */
+  jump(h: number): boolean {
+    if (this.dead || this.tripping || !this.grounded) return false;
+    this.ve = Math.sqrt(2 * L.gravity * clamp(h, 0, this.maxJump));
+    this.jumpAt = this.t;
+    return true;
   }
 
-  keyJump() { if (!this.dead && !this.tripping && this.e <= this.floor() + 2) this.ve = L.keyJump; }
+  /** Right after take-off a faster flick can still raise the jump (never above maxJump). */
+  boost(h: number) {
+    if (this.t - this.jumpAt > L.boostWindow || this.ve <= 0) return;
+    const v = Math.sqrt(2 * L.gravity * Math.max(0, clamp(h, 0, this.maxJump) - this.e));
+    if (v > this.ve) this.ve = v;
+  }
 
   update(dt: number, t: number) {
     this.t = t;
-    this.ph += dt * this.stepHz * Math.PI * this.run;
+    this.ph += dt * this.skipHz * Math.PI * this.run;
     if (this.landed > 0) this.landed -= dt;
     if (this.dead || this.tripping) {
       this.e = Math.max(0, this.e - 900 * dt); this.ve = 0;
-    } else {
-      const fl = this.floor();
-      const vf = dt > 0 ? (fl - this.lastFloor) / dt : 0;
-      this.floorV += (vf - this.floorV) * Math.min(1, dt * 20);
-      this.lastFloor = fl;
-      const prev = this.e, wasAir = prev > 20, taut = prev <= fl + 3;
+    } else if (this.e > 0 || this.ve > 0) {
       this.ve -= L.gravity * dt;
       this.e += this.ve * dt;
-      if (this.e < fl) this.e = fl;
-      // a quick flick of the hand throws him up: he keeps rising after the hand stops
-      if (taut && this.floorV > L.flickMin) this.ve = Math.max(this.ve, this.floorV * L.flickBoost);
-      if (this.e < -this.crouchMax) this.e = -this.crouchMax;
-      if (this.e <= fl + 0.01 && !(taut && this.floorV > L.flickMin)) this.ve = (this.e - prev) / dt;
-      this.ve = Math.min(L.maxRise, this.ve);
-      if (wasAir && this.e < 4) this.landed = 0.2;
+      if (this.e > this.maxJump) { this.e = this.maxJump; this.ve = Math.min(this.ve, 0); }
+      if (this.e <= 0) { this.e = 0; this.ve = 0; this.landed = 0.2; }
     }
     this.pose();
   }
