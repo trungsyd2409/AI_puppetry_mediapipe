@@ -1,7 +1,8 @@
 // Luom, a paper-cut marionette on two strings: index finger -> shoulder, middle finger -> top of the cap.
 // He runs on his own with a skipping gait (chay nhay chan sao). A quick upward flick of the hand makes
-// him jump; the faster the flick, the higher, up to 3/5 of the play area. He must land before the next
-// jump, and holding the hand up does not keep him in the air. `e` = feet above the path (stage px).
+// him jump; the faster the flick, the higher, up to 3/5 of the play area. One more flick in the air
+// gives a double jump; after that he must land first. Holding the hand up does not keep him in the air.
+// `e` = feet above the path (stage px).
 import type { Pt } from "../config";
 import { type M, apply, clamp, mul, rotAt, smoothstep } from "../giong/mat";
 import type { LuomRig } from "./data";
@@ -42,6 +43,9 @@ export class Boy {
   dead = false;
   landed = 0;                 // > 0 for a moment after landing (dust)
   jumpAt = -99;
+  jumpBase = 0;               // feet height at the last take-off
+  airJumps = 0;               // jumps left before he must land
+  doubleAt = -99;             // time of the last double jump (spin + puff)
   maxJump = 400;
   M: Record<string, M> = {};
 
@@ -60,7 +64,7 @@ export class Boy {
   }
 
   reset() {
-    this.e = 0; this.ve = 0; this.run = 0; this.dead = false; this.hitAt = -99; this.deadAt = -99; this.jumpAt = -99;
+    this.e = 0; this.ve = 0; this.run = 0; this.dead = false; this.hitAt = -99; this.deadAt = -99; this.jumpAt = -99; this.airJumps = 0; this.doubleAt = -99;
     this.pose();
   }
 
@@ -153,23 +157,30 @@ export class Boy {
       a.leg_near_shin = mix(a.leg_near_shin, 1.2, trip); a.leg_far_shin = mix(a.leg_far_shin, 0.9, trip);
       a.head = mix(a.head, -0.45, trip);
     }
-    const fall = trip * 1.15 + lie * 0.4;
+    const sd = this.t - this.doubleAt;
+    const spin = sd >= 0 && sd < L.doubleSpin ? ease(sd / L.doubleSpin) * Math.PI * 2 : 0;   // forward flip
+    const fall = trip * 1.15 + lie * 0.4 + spin;
     this.M = this.build(a, Math.max(0, this.e) + hop * (1 - air), fall, lie);
   }
 
   // ------------------------------------------------------------------ physics
-  /** Start a jump of `h` px (only from the path). Returns true if he jumped. */
+  /** Jump `h` px from the path, or a double jump in the air (once). Returns true if he jumped. */
   jump(h: number): boolean {
-    if (this.dead || this.tripping || !this.grounded) return false;
-    this.ve = Math.sqrt(2 * L.gravity * clamp(h, 0, this.maxJump));
+    if (this.dead || this.tripping) return false;
+    if (this.grounded) this.airJumps = L.airJumps;
+    else if (this.airJumps > 0 && this.t - this.jumpAt > 0.15) { this.airJumps--; this.doubleAt = this.t; h *= L.doubleJumpScale; }
+    else return false;
+    this.jumpBase = this.e;
+    this.ve = Math.sqrt(2 * L.gravity * Math.max(0, Math.min(this.e + h, this.maxJump) - this.e));
     this.jumpAt = this.t;
     return true;
   }
 
-  /** Right after take-off a faster flick can still raise the jump (never above maxJump). */
+  /** Right after take-off a faster flick can still raise that jump (never above maxJump). */
   boost(h: number) {
     if (this.t - this.jumpAt > L.boostWindow || this.ve <= 0) return;
-    const v = Math.sqrt(2 * L.gravity * Math.max(0, clamp(h, 0, this.maxJump) - this.e));
+    if (this.t - this.doubleAt < L.boostWindow) h *= L.doubleJumpScale;
+    const v = Math.sqrt(2 * L.gravity * Math.max(0, Math.min(this.jumpBase + h, this.maxJump) - this.e));
     if (v > this.ve) this.ve = v;
   }
 
@@ -183,7 +194,7 @@ export class Boy {
       this.ve -= L.gravity * dt;
       this.e += this.ve * dt;
       if (this.e > this.maxJump) { this.e = this.maxJump; this.ve = Math.min(this.ve, 0); }
-      if (this.e <= 0) { this.e = 0; this.ve = 0; this.landed = 0.2; }
+      if (this.e <= 0) { this.e = 0; this.ve = 0; this.landed = 0.2; this.airJumps = 0; }
     }
     this.pose();
   }

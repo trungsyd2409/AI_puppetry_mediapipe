@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lượm</title>
+</head>
+<body>
+  <main class="app">
+    <div class="stage-wrap">
+      <canvas id="stage" width="1200" height="1200"></canvas>
+      <div id="overlay" class="overlay">
+        <div class="card">
+          <h1 id="cardTitle">Lượm</h1>
+          <p id="cardText">Lượm, the little liaison boy, runs through the ripe rice fields with his satchel of letters. Jump over craters, sheaves, fallen fences and low bullets, and catch the flying letters. He has 10 hearts.</p>
+          <div class="buttons">
+            <button id="btnCamera" class="primary">Use camera</button>
+            <button id="btnMouse">Use mouse (test)</button>
+          </div>
+          <p id="status" class="status">Loading...</p>
+          <p class="hint" id="cardHint">One hand: index → shoulder, middle → cap. Flick the hand up to jump, flick again in the air for a double jump; then he must land.<br>Keys: C camera · M mouse · Enter start · Space jump · D hit boxes<br>Other games: <code>?game=flappy</code> · <code>?game=giong</code></p>
+        </div>
+      </div>
+    </div>
+    <video id="video" playsinline muted></video>
+  </main>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

@@ -4,7 +4,7 @@ export const L = {
   x: 420,                 // stage x of Luom's hips
 
   // jump: a quick upward flick of the hand. Holding the hand up does nothing more.
-  // He must land before he can jump again.
+  // One more flick in the air = double jump; then he must land.
   gravity: 2300,
   flickSpeed: 430,        // stage px/s the hand must rise to start a jump
   flickRearm: 180,        // the hand must slow below this (on the ground) before the next jump
@@ -13,6 +13,9 @@ export const L = {
   flickGain: 0.2,         // extra height per px/s of flick speed above flickSpeed
   boostWindow: 0.12,      // s after take-off during which a faster flick still adds height
   keyJump: 260,           // px for the Space key (mouse / keyboard test)
+  airJumps: 1,            // extra jumps in the air before he must land (1 = double jump)
+  doubleJumpScale: 0.8,   // the air jump is a bit lower than the same flick from the path
+  doubleSpin: 0.45,       // s of the forward flip on the double jump
 
   // skipping run (chay nhay chan sao): one skip per half cycle, a little hop on each
   skipHz: 2.3,            // skips per second at the start speed

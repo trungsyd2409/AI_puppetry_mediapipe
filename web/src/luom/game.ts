@@ -14,7 +14,7 @@ import { Hazards } from "./hazards";
 import { L } from "./lcfg";
 import { lightOverlay } from "./prep";
 
-export const BUILD = "luom build 28-11 23:10";
+export const BUILD = "luom build 28-11 23:30 double jump";
 console.info("[luom]", BUILD);
 
 export type LState = "TITLE" | "RESETTING" | "OPENING" | "READY" | "PLAY" | "DEAD" | "GAMEOVER";
@@ -79,7 +79,7 @@ export class LuomGame {
     this.curtain = new Curtain(data.fx, cropY);
     this.curtain.title = "LƯỢM";
     this.curtain.style = { title: "#5A321B", card: "#E6D4AA", edge: INK, accent: SON, text: INK, width: 880 };
-    this.curtain.lines = ["Run Luom through the ripe rice fields", "Flick the hand up quickly to jump over the dangers",
+    this.curtain.lines = ["Run Luom through the ripe rice fields", "Flick the hand up to jump, flick again in the air to double jump",
       "Index finger: shoulder · middle finger: cap",
       "Show a hand for 1 s (or press Enter) to start"];
   }
@@ -88,7 +88,17 @@ export class LuomGame {
   pressStart() { this.startKey = true; }
 
   onKey(code: string, down: boolean) {
-    if (code === "Space" && down && (this.state === "PLAY" || this.state === "READY")) { if (this.boy.jump(L.keyJump)) this.jumps++; }
+    const before = this.boy.doubleAt;
+    if (code === "Space" && down && (this.state === "PLAY" || this.state === "READY") && this.boy.jump(L.keyJump)) {
+      this.jumps++;
+      if (this.boy.doubleAt !== before) this.doublePuff();
+    }
+  }
+
+  /** Paper cloud puff under the feet on the double jump. */
+  private doublePuff() {
+    const f = this.boy.feet();
+    for (let i = 0; i < 3; i++) this.dust.push({ x: f.x - 30 + i * 30, y: f.y + 4, age: 0, s: 0.8 });
   }
 
   /** One hand drives Luom: the hand nearest to him on screen. */
@@ -167,9 +177,13 @@ export class LuomGame {
     // jump: a quick upward flick while on the path; land before the next one
     if (performance.now() - this.handT > 150) this.handV *= Math.pow(0.02, dt);   // no new camera sample: forget the speed
     if ((playing || this.state === "READY") && this.hand.attached) {
-      if (b.grounded && !this.armed && this.handV < L.flickRearm) this.armed = true;
-      if (this.armed && this.handV > L.flickSpeed && b.jump(this.flickHeight(this.handV))) { this.armed = false; this.jumps++; }
-      else if (!b.grounded) b.boost(this.flickHeight(this.handV));
+      // re-arm once the hand slows down: on the path, or in the air while a double jump is left
+      if (!this.armed && this.handV < L.flickRearm && (b.grounded || b.airJumps > 0)) this.armed = true;
+      const before = b.doubleAt;
+      if (this.armed && this.handV > L.flickSpeed && b.jump(this.flickHeight(this.handV))) {
+        this.armed = false; this.jumps++;
+        if (b.doubleAt !== before) this.doublePuff();
+      } else if (!b.grounded) b.boost(this.flickHeight(this.handV));
     }
     b.update(dt, this.time);
 
@@ -323,7 +337,7 @@ export class LuomGame {
     if (msg) { ctx.font = "bold 32px Georgia, serif"; this.text(ctx, msg, 800, this.cropY + 190); }
     if (this.state === "PLAY" && this.playTime < 6 && this.hand.attached) {
       ctx.font = "26px Georgia, serif";
-      this.text(ctx, "Flick the hand up quickly to jump", 800, this.cropY + 190, `rgba(235,221,184,${1 - smoothstep(4, 6, this.playTime)})`);
+      this.text(ctx, "Flick the hand up to jump · flick again in the air for a double jump", 800, this.cropY + 190, `rgba(235,221,184,${1 - smoothstep(4, 6, this.playTime)})`);
     }
     ctx.fillStyle = "rgba(235,221,184,0.5)";
     ctx.font = "15px Georgia, serif";
