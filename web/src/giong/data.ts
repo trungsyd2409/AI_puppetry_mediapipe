@@ -41,7 +41,7 @@ export interface GStage {
 
 export interface GData { rig: GRig; stage: GStage; fx: Record<string, Sprite> }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+export function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -50,15 +50,15 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-async function json<T>(path: string): Promise<T> {
+export async function json<T>(path: string): Promise<T> {
   const res = await fetch(BASE + path);
   if (!res.ok) throw new Error(`cannot load ${path} (${res.status})`);
   return res.json() as Promise<T>;
 }
 
-type SpriteJson = Record<string, { png: string; size: [number, number]; anchor: [number, number]; pngScale: number }>;
+export type SpriteJson = Record<string, { png: string; size: [number, number]; anchor: [number, number]; pngScale: number }>;
 
-async function sprites(dir: string, defs: SpriteJson): Promise<Record<string, Sprite>> {
+export async function sprites(dir: string, defs: SpriteJson): Promise<Record<string, Sprite>> {
   const out: Record<string, Sprite> = {};
   await Promise.all(Object.entries(defs).map(async ([k, v]) => {
     out[k] = { img: await loadImage(`${BASE}${dir}/${v.png}`), size: v.size, anchor: v.anchor, pngScale: v.pngScale };

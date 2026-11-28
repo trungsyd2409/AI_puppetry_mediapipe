@@ -68,6 +68,11 @@ export class Background {
     for (const l of this.stage.layers) if (l.front) this.drawLayer(ctx, l, scroll, t);
   }
 
+  /** Draw only the named layers (in stage order), with their props. */
+  drawIds(ctx: CanvasRenderingContext2D, scroll: number, t: number, ids: string[]) {
+    for (const l of this.stage.layers) if (ids.includes(l.id)) this.drawLayer(ctx, l, scroll, t);
+  }
+
   private drawLayer(ctx: CanvasRenderingContext2D, l: GStage["layers"][number], scroll: number, t: number) {
     const off = -scroll * l.parallax;
     if (l.img) {

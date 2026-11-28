@@ -27,7 +27,7 @@ export class HandRole {
   private dropped: Pt[] = [];
 
   /** sag = the strings only pull (leg strings); otherwise they also push and stay straight. */
-  constructor(readonly name: "bamboo" | "legs", readonly color: string, readonly sag = false) {}
+  constructor(readonly name: string, readonly color: string, readonly sag = false) {}
 
   /** Seconds the hand has been continuously visible (used to start the game). */
   presentTime = 0;

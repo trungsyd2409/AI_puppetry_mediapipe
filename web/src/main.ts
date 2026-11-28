@@ -1,4 +1,6 @@
-// Thanh Giong game: a boy on a horse holding a bamboo pole, driven by two hands through webcam strings.
+// Puppet games driven by hands through webcam strings.
+//   default      : Flappy chim lac (one hand, two strings on the wings)
+//   ?game=giong  : Thanh Giong, a boy on a horse holding a bamboo pole (two hands)
 // Square screen: webcam on top, the 1600x900 stage below; strings run from the fingertips down to the puppet.
 import "./style.css";
 import { CFG, type Pt } from "./config";
@@ -7,6 +9,10 @@ import type { Control } from "./puppet";
 import { drawCamera } from "./render";
 import { loadGiong } from "./giong/data";
 import { Game } from "./giong/game";
+import { loadFlappy } from "./flappy/data";
+import { FlappyGame } from "./flappy/game";
+
+const GAME = new URLSearchParams(location.search).get("game") === "giong" ? "giong" : "flappy";
 
 const canvas = document.getElementById("stage") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
@@ -14,7 +20,7 @@ const video = document.getElementById("video") as HTMLVideoElement;
 const overlay = document.getElementById("overlay")!;
 const statusEl = document.getElementById("status")!;
 
-let game: Game;
+let game: Game | FlappyGame;
 let source: HandSource | null = null;
 let fakeHands: HandObs[] | null = null;      // tests can inject hands
 let lastHands: HandObs[] = [];
@@ -81,7 +87,10 @@ function render(now: number) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, W, W);
   const hint = lastHands.length ? [] : source?.kind === "mouse"
-    ? ["MOUSE MODE", "Hold the left button: left half moves the bamboo, right half moves the horse legs",
+    ? GAME === "flappy"
+      ? ["MOUSE MODE", "Hold the left button and move: the bird follows the hand",
+        "Keys 2, 3: lift index / middle finger (beat a wing) · release the button: strings break"]
+      : ["MOUSE MODE", "Hold the left button: left half moves the bamboo, right half moves the horse legs",
       "Keys 2, 3: lift index / middle finger · release the button: strings break"]
     : ["Camera is off", "Press Camera [C] or Mouse [M]"];
   drawCamera(ctx, W, V.split, source?.kind === "camera" ? source.video : undefined, camRect(), lastHands, normToScreen, hint);
@@ -108,10 +117,18 @@ function render(now: number) {
 // ------------------------------------------------------------------ boot
 async function boot() {
   statusEl.textContent = "Loading the puppet and the stage...";
-  const data = await loadGiong();
+  const data = GAME === "flappy" ? await loadFlappy() : await loadGiong();
   canvas.width = W;
   canvas.height = W;
-  game = new Game(data, V.stageCropY);
+  game = GAME === "flappy"
+    ? new FlappyGame(data as Awaited<ReturnType<typeof loadFlappy>>, V.stageCropY)
+    : new Game(data as Awaited<ReturnType<typeof loadGiong>>, V.stageCropY);
+  document.title = GAME === "flappy" ? "Chim Lạc" : "Thánh Gióng";
+  if (GAME === "giong") {
+    document.getElementById("cardTitle")!.textContent = "Thánh Gióng";
+    document.getElementById("cardText")!.textContent = "A boy rides a horse with a bamboo pole while fire stones fly in from the front. Swing the bamboo to block them, or pull the horse's legs so it rears and stamps them out.";
+    document.getElementById("cardHint")!.innerHTML = "Left hand: index → bamboo tip, middle → bamboo base<br>Right hand: index → near front leg, middle → far front leg<br>Keys: C camera · M mouse · Enter start · D hit boxes";
+  }
   statusEl.textContent = "Choose how to play.";
   requestAnimationFrame(frame);
 }
