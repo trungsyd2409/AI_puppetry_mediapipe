@@ -1,0 +1,247 @@
+{
+  "name": "chim_lac",
+  "units": "design units (1 unit = 2 px in PNG); y down; facing right; colliders relative to part pivot",
+  "canvas": [
+    640,
+    420
+  ],
+  "pngScale": 2,
+  "feetY": 307,
+  "parts": [
+    {
+      "id": "tail",
+      "parent": "body",
+      "z": 1,
+      "svg": "parts/tail.svg",
+      "png": "parts/tail.png",
+      "origin": [
+        22,
+        104
+      ],
+      "size": [
+        234,
+        209
+      ],
+      "pivot": [
+        214,
+        110
+      ],
+      "pivotWorld": [
+        236,
+        214
+      ],
+      "limitDeg": [
+        -25,
+        25
+      ],
+      "density": 0.3,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            -2
+          ],
+          "b": [
+            -116,
+            -14
+          ],
+          "r": 18
+        }
+      ]
+    },
+    {
+      "id": "wing_far",
+      "parent": "body",
+      "z": 2,
+      "svg": "parts/wing_far.svg",
+      "png": "parts/wing_far.png",
+      "origin": [
+        157,
+        15
+      ],
+      "size": [
+        202,
+        182
+      ],
+      "pivot": [
+        193,
+        171
+      ],
+      "pivotWorld": [
+        350,
+        186
+      ],
+      "limitDeg": [
+        -70,
+        60
+      ],
+      "density": 0.3,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            -88.58,
+            -154.21
+          ],
+          "r": 15
+        }
+      ]
+    },
+    {
+      "id": "body",
+      "parent": null,
+      "z": 3,
+      "svg": "parts/body.svg",
+      "png": "parts/body.png",
+      "origin": [
+        222,
+        45
+      ],
+      "size": [
+        374,
+        249
+      ],
+      "pivot": [
+        108,
+        165
+      ],
+      "pivotWorld": [
+        330,
+        210
+      ],
+      "limitDeg": null,
+      "density": 1.0,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            -80,
+            4
+          ],
+          "b": [
+            70,
+            -4
+          ],
+          "r": 34
+        },
+        {
+          "type": "circle",
+          "c": [
+            122,
+            -70
+          ],
+          "r": 24
+        },
+        {
+          "type": "capsule",
+          "a": [
+            140,
+            -70
+          ],
+          "b": [
+            245,
+            -60
+          ],
+          "r": 6
+        }
+      ]
+    },
+    {
+      "id": "wing_near",
+      "parent": "body",
+      "z": 4,
+      "svg": "parts/wing_near.svg",
+      "png": "parts/wing_near.png",
+      "origin": [
+        113,
+        28
+      ],
+      "size": [
+        225,
+        182
+      ],
+      "pivot": [
+        217,
+        168
+      ],
+      "pivotWorld": [
+        330,
+        196
+      ],
+      "limitDeg": [
+        -70,
+        60
+      ],
+      "density": 0.3,
+      "colliders": [
+        {
+          "type": "capsule",
+          "a": [
+            0,
+            0
+          ],
+          "b": [
+            -112.0,
+            -150.0
+          ],
+          "r": 16
+        }
+      ]
+    }
+  ],
+  "strings": [
+    {
+      "id": "wing_near",
+      "part": "wing_near",
+      "anchor": [
+        170.63,
+        67.06
+      ],
+      "anchorWorld": [
+        283.63,
+        95.06
+      ],
+      "hand": "right",
+      "finger": "index",
+      "mpLandmark": 8
+    },
+    {
+      "id": "wing_far",
+      "part": "wing_far",
+      "anchor": [
+        160.75,
+        70.52
+      ],
+      "anchorWorld": [
+        317.75,
+        85.52
+      ],
+      "hand": "right",
+      "finger": "middle",
+      "mpLandmark": 12
+    }
+  ],
+  "head": [
+    452,
+    140
+  ],
+  "beakTip": [
+    588,
+    152
+  ],
+  "shoulders": {
+    "near": [
+      330,
+      196
+    ],
+    "far": [
+      350,
+      186
+    ]
+  }
+}

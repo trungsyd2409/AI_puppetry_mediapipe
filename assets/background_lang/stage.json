@@ -1,0 +1,408 @@
+{
+  "size": [
+    1600,
+    900
+  ],
+  "floorY": 820,
+  "groundY": 820,
+  "tileWidth": 1600,
+  "paper": "paper.png",
+  "wind": 18,
+  "layers": [
+    {
+      "id": "sky",
+      "png": "layer_sky.png",
+      "parallax": 0.0,
+      "front": false
+    },
+    {
+      "id": "clouds",
+      "png": null,
+      "parallax": 0.05,
+      "front": false
+    },
+    {
+      "id": "mountains",
+      "png": "layer_mountains.png",
+      "parallax": 0.12,
+      "front": false
+    },
+    {
+      "id": "village",
+      "png": "layer_village.png",
+      "parallax": 0.3,
+      "front": false
+    },
+    {
+      "id": "fields",
+      "png": "layer_fields.png",
+      "parallax": 0.6,
+      "front": false
+    },
+    {
+      "id": "ground",
+      "png": "layer_ground.png",
+      "parallax": 1.0,
+      "front": false
+    }
+  ],
+  "sprites": {
+    "flag5_0": {
+      "png": "props/flag5_0.png",
+      "size": [
+        150,
+        200
+      ],
+      "anchor": [
+        20,
+        192
+      ],
+      "pngScale": 2
+    },
+    "flag5_1": {
+      "png": "props/flag5_1.png",
+      "size": [
+        150,
+        200
+      ],
+      "anchor": [
+        20,
+        192
+      ],
+      "pngScale": 2
+    },
+    "flag5_2": {
+      "png": "props/flag5_2.png",
+      "size": [
+        150,
+        200
+      ],
+      "anchor": [
+        20,
+        192
+      ],
+      "pngScale": 2
+    },
+    "flag5_3": {
+      "png": "props/flag5_3.png",
+      "size": [
+        150,
+        200
+      ],
+      "anchor": [
+        20,
+        192
+      ],
+      "pngScale": 2
+    },
+    "flag5_4": {
+      "png": "props/flag5_4.png",
+      "size": [
+        150,
+        200
+      ],
+      "anchor": [
+        20,
+        192
+      ],
+      "pngScale": 2
+    },
+    "flag5_5": {
+      "png": "props/flag5_5.png",
+      "size": [
+        150,
+        200
+      ],
+      "anchor": [
+        20,
+        192
+      ],
+      "pngScale": 2
+    },
+    "smoke_light": {
+      "png": "props/smoke_light.png",
+      "size": [
+        120,
+        90
+      ],
+      "anchor": [
+        60,
+        50
+      ],
+      "pngScale": 2
+    },
+    "kite_0": {
+      "png": "props/kite_0.png",
+      "size": [
+        80,
+        180
+      ],
+      "anchor": [
+        40,
+        46
+      ],
+      "pngScale": 2
+    },
+    "kite_1": {
+      "png": "props/kite_1.png",
+      "size": [
+        80,
+        180
+      ],
+      "anchor": [
+        40,
+        46
+      ],
+      "pngScale": 2
+    },
+    "bamboo_0": {
+      "png": "props/bamboo_0.png",
+      "size": [
+        300,
+        340
+      ],
+      "anchor": [
+        150,
+        330
+      ],
+      "pngScale": 2
+    },
+    "bamboo_1": {
+      "png": "props/bamboo_1.png",
+      "size": [
+        300,
+        340
+      ],
+      "anchor": [
+        150,
+        330
+      ],
+      "pngScale": 2
+    },
+    "cloud_0": {
+      "png": "props/cloud_0.png",
+      "size": [
+        220,
+        110
+      ],
+      "anchor": [
+        110,
+        55
+      ],
+      "pngScale": 2
+    },
+    "cloud_1": {
+      "png": "props/cloud_1.png",
+      "size": [
+        220,
+        110
+      ],
+      "anchor": [
+        110,
+        55
+      ],
+      "pngScale": 2
+    },
+    "cloud_2": {
+      "png": "props/cloud_2.png",
+      "size": [
+        220,
+        110
+      ],
+      "anchor": [
+        110,
+        55
+      ],
+      "pngScale": 2
+    },
+    "buffalo": {
+      "png": "props/buffalo.png",
+      "size": [
+        200,
+        130
+      ],
+      "anchor": [
+        90,
+        90
+      ],
+      "pngScale": 2
+    },
+    "sun_rays": {
+      "png": "props/sun_rays.png",
+      "size": [
+        280,
+        280
+      ],
+      "anchor": [
+        140,
+        140
+      ],
+      "pngScale": 2
+    }
+  },
+  "props": [
+    {
+      "layer": "sky",
+      "type": "spin",
+      "sprite": "sun_rays",
+      "x": 1250,
+      "y": 230,
+      "speed": 5
+    },
+    {
+      "layer": "clouds",
+      "type": "drift",
+      "sprite": "cloud_0",
+      "x": 200,
+      "y": 150,
+      "vx": -8,
+      "bob": 4
+    },
+    {
+      "layer": "clouds",
+      "type": "drift",
+      "sprite": "cloud_1",
+      "x": 700,
+      "y": 110,
+      "vx": -5,
+      "bob": 4
+    },
+    {
+      "layer": "clouds",
+      "type": "drift",
+      "sprite": "cloud_2",
+      "x": 1050,
+      "y": 220,
+      "vx": -10,
+      "bob": 4
+    },
+    {
+      "layer": "clouds",
+      "type": "drift",
+      "sprite": "cloud_0",
+      "x": 1450,
+      "y": 140,
+      "vx": -6,
+      "bob": 4
+    },
+    {
+      "layer": "clouds",
+      "type": "anim",
+      "frames": [
+        "kite_0",
+        "kite_1"
+      ],
+      "fps": 5,
+      "x": 420,
+      "y": 300,
+      "scale": 0.8
+    },
+    {
+      "layer": "village",
+      "type": "anim",
+      "frames": [
+        "flag5_0",
+        "flag5_1",
+        "flag5_2",
+        "flag5_3",
+        "flag5_4",
+        "flag5_5"
+      ],
+      "fps": 8,
+      "x": 1050,
+      "y": 698,
+      "scale": 0.95
+    },
+    {
+      "layer": "village",
+      "type": "anim",
+      "frames": [
+        "flag5_0",
+        "flag5_1",
+        "flag5_2",
+        "flag5_3",
+        "flag5_4",
+        "flag5_5"
+      ],
+      "fps": 7,
+      "x": 580,
+      "y": 698,
+      "scale": 0.8
+    },
+    {
+      "layer": "village",
+      "type": "smoke",
+      "x": 330,
+      "y": 570,
+      "sprite": "smoke_light",
+      "rate": 1.2,
+      "life": 4.5,
+      "rise": 34,
+      "grow": 1.3,
+      "scale": 0.45
+    },
+    {
+      "layer": "village",
+      "type": "smoke",
+      "x": 1310,
+      "y": 570,
+      "sprite": "smoke_light",
+      "rate": 1.2,
+      "life": 4.5,
+      "rise": 34,
+      "grow": 1.3,
+      "scale": 0.45
+    },
+    {
+      "layer": "village",
+      "type": "sway",
+      "sprite": "bamboo_0",
+      "x": 80,
+      "y": 700,
+      "scale": 0.9,
+      "amp": 2.0,
+      "speed": 1.2
+    },
+    {
+      "layer": "village",
+      "type": "sway",
+      "sprite": "bamboo_1",
+      "x": 420,
+      "y": 700,
+      "scale": 0.85,
+      "amp": 2.0,
+      "speed": 1.2
+    },
+    {
+      "layer": "village",
+      "type": "sway",
+      "sprite": "bamboo_0",
+      "x": 1120,
+      "y": 700,
+      "scale": 0.95,
+      "amp": 2.0,
+      "speed": 1.2
+    },
+    {
+      "layer": "village",
+      "type": "sway",
+      "sprite": "bamboo_1",
+      "x": 1480,
+      "y": 700,
+      "scale": 0.9,
+      "amp": 2.0,
+      "speed": 1.2
+    },
+    {
+      "layer": "fields",
+      "type": "sway",
+      "sprite": "buffalo",
+      "x": 1000,
+      "y": 742,
+      "scale": 0.7,
+      "amp": 0.8,
+      "speed": 0.8
+    }
+  ],
+  "note": "same format as background_giong/stage.json. Bamboo columns (fx_flappy) are drawn between 'fields' and 'ground'. Touching groundY ends the run."
+}

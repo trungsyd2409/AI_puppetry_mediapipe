@@ -1,0 +1,78 @@
+{
+  "bamboo_body": {
+    "png": "bamboo_body.png",
+    "size": [
+      170,
+      240
+    ],
+    "anchor": [
+      85.0,
+      0
+    ],
+    "pngScale": 2,
+    "tileH": 240,
+    "colW": 150
+  },
+  "bamboo_cap": {
+    "png": "bamboo_cap.png",
+    "size": [
+      230,
+      140
+    ],
+    "anchor": [
+      115.0,
+      120
+    ],
+    "pngScale": 2,
+    "colW": 150,
+    "capTop": -100
+  },
+  "feather_0": {
+    "png": "feather_0.png",
+    "size": [
+      90,
+      34
+    ],
+    "anchor": [
+      45,
+      17
+    ],
+    "pngScale": 2
+  },
+  "feather_1": {
+    "png": "feather_1.png",
+    "size": [
+      90,
+      34
+    ],
+    "anchor": [
+      45,
+      17
+    ],
+    "pngScale": 2
+  },
+  "feather_2": {
+    "png": "feather_2.png",
+    "size": [
+      90,
+      34
+    ],
+    "anchor": [
+      45,
+      17
+    ],
+    "pngScale": 2
+  },
+  "impact": {
+    "png": "impact.png",
+    "size": [
+      140,
+      140
+    ],
+    "anchor": [
+      70,
+      70
+    ],
+    "pngScale": 2
+  }
+}

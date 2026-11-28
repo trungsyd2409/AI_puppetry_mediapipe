@@ -400,3 +400,22 @@ def make_paper(path, size=512, seed=7, base=(239, 226, 194)):
     xs, ys = rng.integers(0, size, n), rng.integers(0, size, n)
     img[ys, xs] = np.minimum(255, img[ys, xs] + rng.uniform(8, 18, (n, 1)))
     Image.fromarray(np.clip(img, 0, 255).astype(np.uint8)).save(path)
+
+
+def strand(p0, p1, p2, p3, w0, fill, n=26, vein=True, sw=2.4):
+    """Long tapered lock / feather along a cubic bezier (tail plumes, crests, mane)."""
+    left, right = [], []
+    for i in range(n + 1):
+        t = i / n
+        p = bez(p0, p1, p2, p3, t)
+        nx, ny = bez_norm(p0, p1, p2, p3, t)
+        w = w0 * (1 - t) ** 0.75 * (0.85 + 0.15 * math.sin(t * math.pi)) + 0.6
+        left.append((p[0] + nx * w, p[1] + ny * w))
+        right.append((p[0] - nx * w, p[1] - ny * w))
+    d = "M" + " L".join(f2(p) for p in left) + " L" + " L".join(f2(p) for p in reversed(right)) + " Z"
+    out = ink(d, fill, sw)
+    if vein:
+        mid = [bez(p0, p1, p2, p3, t / 10) for t in range(1, 9)]
+        out += line("M" + " L".join(f2(p) for p in mid), 1.2,
+                    INK if fill == TRANG else (TRANG if fill != VANG else SON))
+    return out
