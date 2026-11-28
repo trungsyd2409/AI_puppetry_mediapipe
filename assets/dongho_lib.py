@@ -293,10 +293,13 @@ def print_texture(png_path, amount=1.0):
 
 
 def write_svg_png(path_noext, inner, vb, scale=2, rough=True, texture=True):
+    """texture: True = Dong Ho print grain, a function = custom post-process(png_path), False = none."""
     with open(path_noext + ".svg", "w") as f:
         f.write(svg_doc(inner, vb, rough))
     render(path_noext + ".svg", path_noext + ".png", scale)
-    if texture:
+    if callable(texture):
+        texture(path_noext + ".png")
+    elif texture:
         print_texture(path_noext + ".png")
 
 
@@ -316,7 +319,7 @@ def _local(shape, pivot):
     return out
 
 
-def build(out_dir, name, canvas, parts, strings, colliders=None, extra=None, scale=2, pad=6):
+def build(out_dir, name, canvas, parts, strings, colliders=None, extra=None, scale=2, pad=6, texture=True, rough=True):
     """parts: (id, parent, z, svg, pivot_world, limitDeg|None)
     strings: (id, part, anchor_world, hand, finger, mediapipe_landmark)"""
     W, H = canvas
@@ -326,14 +329,14 @@ def build(out_dir, name, canvas, parts, strings, colliders=None, extra=None, sca
     rig_parts = []
     for pid, parent, z, inner, pivot, limits in parts:
         tmp = os.path.join(out_dir, f"_tmp_{pid}")
-        write_svg_png(tmp, inner, (0, 0, W, H), scale, texture=False)
+        write_svg_png(tmp, inner, (0, 0, W, H), scale, rough=rough, texture=False)
         bx0, by0, bx1, by1 = Image.open(tmp + ".png").getbbox()
         x0 = max(0, math.floor(bx0 / scale) - pad)
         y0 = max(0, math.floor(by0 / scale) - pad)
         x1 = min(W, math.ceil(bx1 / scale) + pad)
         y1 = min(H, math.ceil(by1 / scale) + pad)
         vb = (x0, y0, x1 - x0, y1 - y0)
-        write_svg_png(os.path.join(parts_dir, pid), inner, vb, scale)
+        write_svg_png(os.path.join(parts_dir, pid), inner, vb, scale, rough=rough, texture=texture)
         os.remove(tmp + ".svg"); os.remove(tmp + ".png")
         rig_parts.append({
             "id": pid, "parent": parent, "z": z,
@@ -367,7 +370,7 @@ def build(out_dir, name, canvas, parts, strings, colliders=None, extra=None, sca
     with open(os.path.join(out_dir, "rig.json"), "w") as f:
         json.dump(rig, f, indent=2)
     full = "".join(p[3] for p in sorted(parts, key=lambda p: p[2]))
-    write_svg_png(os.path.join(out_dir, f"{name}_full"), full, (0, 0, W, H), scale)
+    write_svg_png(os.path.join(out_dir, f"{name}_full"), full, (0, 0, W, H), scale, rough=rough, texture=texture)
     return rig
 
 

@@ -1,0 +1,300 @@
+{
+  "plane_0": {
+    "png": "plane_0.png",
+    "size": [
+      290,
+      110
+    ],
+    "anchor": [
+      145,
+      55
+    ],
+    "pngScale": 2,
+    "box": [
+      -120,
+      -22,
+      124,
+      26
+    ]
+  },
+  "plane_1": {
+    "png": "plane_1.png",
+    "size": [
+      290,
+      110
+    ],
+    "anchor": [
+      145,
+      55
+    ],
+    "pngScale": 2,
+    "box": [
+      -120,
+      -22,
+      124,
+      26
+    ]
+  },
+  "bomb": {
+    "png": "bomb.png",
+    "size": [
+      60,
+      100
+    ],
+    "anchor": [
+      30,
+      52
+    ],
+    "pngScale": 2,
+    "box": [
+      -14,
+      -30,
+      14,
+      40
+    ]
+  },
+  "explode_0": {
+    "png": "explode_0.png",
+    "size": [
+      220,
+      200
+    ],
+    "anchor": [
+      110,
+      120
+    ],
+    "pngScale": 2
+  },
+  "explode_1": {
+    "png": "explode_1.png",
+    "size": [
+      220,
+      200
+    ],
+    "anchor": [
+      110,
+      120
+    ],
+    "pngScale": 2
+  },
+  "explode_2": {
+    "png": "explode_2.png",
+    "size": [
+      220,
+      200
+    ],
+    "anchor": [
+      110,
+      120
+    ],
+    "pngScale": 2
+  },
+  "explode_3": {
+    "png": "explode_3.png",
+    "size": [
+      220,
+      200
+    ],
+    "anchor": [
+      110,
+      120
+    ],
+    "pngScale": 2
+  },
+  "crater": {
+    "png": "crater.png",
+    "size": [
+      200,
+      50
+    ],
+    "anchor": [
+      100,
+      30
+    ],
+    "pngScale": 2,
+    "box": [
+      -60,
+      -12,
+      60,
+      10
+    ]
+  },
+  "bullet": {
+    "png": "bullet.png",
+    "size": [
+      90,
+      24
+    ],
+    "anchor": [
+      12,
+      12
+    ],
+    "pngScale": 2,
+    "box": [
+      -8,
+      -5,
+      60,
+      5
+    ]
+  },
+  "sheaf": {
+    "png": "sheaf.png",
+    "size": [
+      80,
+      124
+    ],
+    "anchor": [
+      40,
+      118
+    ],
+    "pngScale": 2,
+    "box": [
+      -24,
+      -110,
+      24,
+      0
+    ]
+  },
+  "stump": {
+    "png": "stump.png",
+    "size": [
+      120,
+      76
+    ],
+    "anchor": [
+      60,
+      70
+    ],
+    "pngScale": 2,
+    "box": [
+      -34,
+      -56,
+      34,
+      0
+    ]
+  },
+  "fence": {
+    "png": "fence.png",
+    "size": [
+      190,
+      70
+    ],
+    "anchor": [
+      95,
+      62
+    ],
+    "pngScale": 2,
+    "box": [
+      -80,
+      -50,
+      84,
+      0
+    ]
+  },
+  "letter": {
+    "png": "letter.png",
+    "size": [
+      70,
+      54
+    ],
+    "anchor": [
+      35,
+      26
+    ],
+    "pngScale": 2,
+    "box": [
+      -30,
+      -20,
+      30,
+      22
+    ]
+  },
+  "heart": {
+    "png": "heart.png",
+    "size": [
+      52,
+      44
+    ],
+    "anchor": [
+      26,
+      22
+    ],
+    "pngScale": 2
+  },
+  "heart_empty": {
+    "png": "heart_empty.png",
+    "size": [
+      52,
+      44
+    ],
+    "anchor": [
+      26,
+      22
+    ],
+    "pngScale": 2
+  },
+  "note_0": {
+    "png": "note_0.png",
+    "size": [
+      50,
+      48
+    ],
+    "anchor": [
+      22,
+      34
+    ],
+    "pngScale": 2
+  },
+  "note_1": {
+    "png": "note_1.png",
+    "size": [
+      50,
+      48
+    ],
+    "anchor": [
+      22,
+      34
+    ],
+    "pngScale": 2
+  },
+  "dust": {
+    "png": "dust.png",
+    "size": [
+      90,
+      50
+    ],
+    "anchor": [
+      45,
+      30
+    ],
+    "pngScale": 2
+  },
+  "curtain_panel": {
+    "png": "curtain_panel.png",
+    "size": [
+      820,
+      900
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "pngScale": 1
+  },
+  "curtain_top": {
+    "png": "curtain_top.png",
+    "size": [
+      1600,
+      190
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "pngScale": 1,
+    "plaque": [
+      800,
+      92
+    ]
+  }
+}

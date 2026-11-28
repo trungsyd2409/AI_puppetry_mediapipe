@@ -7,6 +7,8 @@ export class Curtain {
   private from = 1; private to = 1; private t = 0; private dur = 1;
   title = "THÁNH GIÓNG";
   lines: string[] = [];
+  /** Colours of the title on the valance plaque and of the paper card. */
+  style = { title: "#F4ECD6", card: "#EFE2C2", edge: "#241A14", accent: "#A63A25", text: "#241A14", width: 760 };
 
   constructor(private fx: Record<string, Sprite>, private cropY: number) {}
 
@@ -38,19 +40,19 @@ export class Curtain {
     ctx.save();
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillStyle = "#F4ECD6";
+    ctx.fillStyle = this.style.title;
     ctx.font = "bold 34px Georgia, 'Times New Roman', serif";
     ctx.fillText(this.title, 800, vy + 93);
     if (this.lines.length) {
-      const w = 760, h = 70 + this.lines.length * 52, x = 800 - w / 2, y = 520 - h / 2;
-      ctx.fillStyle = "#EFE2C2";
-      ctx.strokeStyle = "#241A14";
+      const w = this.style.width, h = 70 + this.lines.length * 52, x = 800 - w / 2, y = 520 - h / 2;
+      ctx.fillStyle = this.style.card;
+      ctx.strokeStyle = this.style.edge;
       ctx.lineWidth = 5;
       ctx.beginPath(); ctx.roundRect(x, y, w, h, 14); ctx.fill(); ctx.stroke();
-      ctx.strokeStyle = "#A63A25"; ctx.lineWidth = 2; ctx.setLineDash([10, 7]);
+      ctx.strokeStyle = this.style.accent; ctx.lineWidth = 2; ctx.setLineDash([10, 7]);
       ctx.beginPath(); ctx.roundRect(x + 12, y + 12, w - 24, h - 24, 10); ctx.stroke(); ctx.setLineDash([]);
       this.lines.forEach((l, i) => {
-        ctx.fillStyle = i === 0 ? "#A63A25" : "#241A14";
+        ctx.fillStyle = i === 0 ? this.style.accent : this.style.text;
         ctx.font = i === 0 ? "bold 40px Georgia, serif" : "28px Georgia, serif";
         ctx.fillText(l, 800, y + 60 + i * 52);
       });
